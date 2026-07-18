@@ -30,7 +30,9 @@ def run() -> None:
 
     with TelemetryClient(config) as client:
         while not stop_event.is_set():
-            client.send(create_payload())
+            delivered = client.send(create_payload())
+            if delivered and config.health_file is not None:
+                config.health_file.touch()
             stop_event.wait(config.interval_seconds)
 
     LOGGER.info("telemetry generator stopped")

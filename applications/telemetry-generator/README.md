@@ -14,6 +14,7 @@ Local process that emits fictional battery, wind, and marine telemetry to the AP
 - `TELEMETRY_REQUEST_TIMEOUT_SECONDS` defaults to `5`.
 - `TELEMETRY_MAX_RETRIES` defaults to `3`.
 - `TELEMETRY_INITIAL_BACKOFF_SECONDS` defaults to `0.5`.
+- `TELEMETRY_GENERATOR_HEALTH_FILE` optionally selects a successful-delivery health marker.
 
 Run from the repository root after installing `requirements-dev.txt`:
 
@@ -21,4 +22,3 @@ Run from the repository root after installing `requirements-dev.txt`:
 PYTHONPATH=applications/telemetry-generator/src \
   .venv/bin/python -m telemetry_generator.main
 ```
-

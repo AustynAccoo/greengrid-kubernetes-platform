@@ -2,6 +2,7 @@
 
 import os
 from dataclasses import dataclass
+from pathlib import Path
 
 
 @dataclass(frozen=True)
@@ -13,6 +14,7 @@ class GeneratorConfig:
     request_timeout_seconds: float = 5.0
     max_retries: int = 3
     initial_backoff_seconds: float = 0.5
+    health_file: Path | None = None
 
     @classmethod
     def from_environment(cls) -> "GeneratorConfig":
@@ -31,6 +33,7 @@ class GeneratorConfig:
             initial_backoff_seconds=_positive_float(
                 "TELEMETRY_INITIAL_BACKOFF_SECONDS", defaults.initial_backoff_seconds
             ),
+            health_file=_optional_path("TELEMETRY_GENERATOR_HEALTH_FILE"),
         )
 
 
@@ -58,3 +61,8 @@ def _non_negative_int(name: str, default: int) -> int:
     if value < 0:
         raise ValueError(f"{name} must be zero or greater")
     return value
+
+
+def _optional_path(name: str) -> Path | None:
+    raw_value = os.getenv(name)
+    return Path(raw_value) if raw_value else None

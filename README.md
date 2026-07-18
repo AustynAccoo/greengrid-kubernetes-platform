@@ -46,6 +46,8 @@ Start the API with `make run-api`, then start the generator in another terminal 
 
 Major dependencies are deliberately limited: FastAPI supplies the API framework, Pydantic performs schema validation, Uvicorn serves ASGI locally, HTTPX provides the generator's timeout-aware HTTP client, Pytest runs unit tests, and Ruff handles formatting and linting. Runtime dependencies are pinned per service; development-only dependencies are pinned in `requirements-dev.txt`.
 
+For secure local containers, use `make build` and `make run`. See [docs/local-containers.md](docs/local-containers.md) for the container security model, configuration, verification, and cleanup workflow.
+
 ## Deployment
 
 Deployment instructions will be added with the platform implementation. This application task creates no cloud or Kubernetes resources.
