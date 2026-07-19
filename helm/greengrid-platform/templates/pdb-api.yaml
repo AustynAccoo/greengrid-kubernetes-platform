@@ -1,0 +1,16 @@
+{{- if .Values.telemetryApi.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "greengrid.apiName" . }}
+  labels:
+    {{- include "greengrid.labels" . | nindent 4 }}
+    app.kubernetes.io/component: telemetry-api
+spec:
+  minAvailable: {{ .Values.telemetryApi.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "greengrid.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: telemetry-api
+{{- end }}
+

@@ -1,0 +1,89 @@
+nameOverride: ""
+fullnameOverride: ""
+commonLabels: {}
+imagePullSecrets: []
+
+telemetryApi:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/austynaccoo/greengrid-telemetry-api
+    tag: git-0000000000000000000000000000000000000000
+    pullPolicy: IfNotPresent
+  service: {port: 8000}
+  config: {retentionLimit: 1000, logLevel: info}
+  podAnnotations: {}
+  podLabels: {}
+  resources:
+    requests: {cpu: 100m, memory: 128Mi}
+    limits: {cpu: 500m, memory: 256Mi}
+  probes:
+    startup: {path: /health/live, initialDelaySeconds: 0, periodSeconds: 2, timeoutSeconds: 2, failureThreshold: 30}
+    readiness: {path: /health/ready, initialDelaySeconds: 0, periodSeconds: 5, timeoutSeconds: 2, failureThreshold: 3}
+    liveness: {path: /health/live, initialDelaySeconds: 0, periodSeconds: 10, timeoutSeconds: 2, failureThreshold: 3}
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 70
+    behavior:
+      scaleUp: {stabilizationWindowSeconds: 0, percent: 100, periodSeconds: 60}
+      scaleDown: {stabilizationWindowSeconds: 300, percent: 50, periodSeconds: 60}
+  podDisruptionBudget: {enabled: true, minAvailable: 0}
+
+telemetryGenerator:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/austynaccoo/greengrid-telemetry-generator
+    tag: git-0000000000000000000000000000000000000000
+    pullPolicy: IfNotPresent
+  config: {intervalSeconds: 5, requestTimeoutSeconds: 5, maxRetries: 3, initialBackoffSeconds: 0.5, logLevel: info}
+  podAnnotations: {}
+  podLabels: {}
+  resources:
+    requests: {cpu: 50m, memory: 64Mi}
+    limits: {cpu: 250m, memory: 128Mi}
+  probes:
+    healthFile: /tmp/greengrid-generator-healthy
+    maximumAgeSeconds: 30
+    startup: {initialDelaySeconds: 0, periodSeconds: 5, timeoutSeconds: 2, failureThreshold: 12}
+    readiness: {initialDelaySeconds: 0, periodSeconds: 5, timeoutSeconds: 2, failureThreshold: 3}
+    liveness: {initialDelaySeconds: 0, periodSeconds: 10, timeoutSeconds: 2, failureThreshold: 3}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  fsGroup: 10001
+  fsGroupChangePolicy: OnRootMismatch
+  seccompProfile: {type: RuntimeDefault}
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  privileged: false
+  capabilities: {drop: [ALL]}
+resourceQuota:
+  enabled: true
+  hard:
+    requests.cpu: "1"
+    requests.memory: 1Gi
+    limits.cpu: "2"
+    limits.memory: 2Gi
+    pods: "10"
+    services: "5"
+    configmaps: "10"
+limitRange:
+  enabled: true
+  container:
+    defaultRequest: {cpu: 50m, memory: 64Mi}
+    default: {cpu: 500m, memory: 256Mi}
+    min: {cpu: 10m, memory: 32Mi}
+    max: {cpu: "2", memory: 1Gi}
+networkPolicy:
+  enabled: true
+  dns:
+    namespaceLabel: {kubernetes.io/metadata.name: kube-system}
+    podLabels: {k8s-app: kube-dns}
+serviceAccount:
+  annotations:
+    telemetryApi: {}
+    telemetryGenerator: {}

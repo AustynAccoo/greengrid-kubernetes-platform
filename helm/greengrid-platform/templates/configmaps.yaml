@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "greengrid.apiName" . }}
+  labels:
+    {{- include "greengrid.labels" . | nindent 4 }}
+    app.kubernetes.io/component: telemetry-api
+data:
+  TELEMETRY_RETENTION_LIMIT: {{ .Values.telemetryApi.config.retentionLimit | quote }}
+  LOG_LEVEL: {{ .Values.telemetryApi.config.logLevel | quote }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "greengrid.generatorName" . }}
+  labels:
+    {{- include "greengrid.labels" . | nindent 4 }}
+    app.kubernetes.io/component: telemetry-generator
+data:
+  TELEMETRY_API_URL: {{ printf "http://%s:%v" (include "greengrid.apiName" .) .Values.telemetryApi.service.port | quote }}
+  TELEMETRY_INTERVAL_SECONDS: {{ .Values.telemetryGenerator.config.intervalSeconds | quote }}
+  TELEMETRY_REQUEST_TIMEOUT_SECONDS: {{ .Values.telemetryGenerator.config.requestTimeoutSeconds | quote }}
+  TELEMETRY_MAX_RETRIES: {{ .Values.telemetryGenerator.config.maxRetries | quote }}
+  TELEMETRY_INITIAL_BACKOFF_SECONDS: {{ .Values.telemetryGenerator.config.initialBackoffSeconds | quote }}
+  TELEMETRY_GENERATOR_HEALTH_FILE: {{ .Values.telemetryGenerator.probes.healthFile | quote }}
+  LOG_LEVEL: {{ .Values.telemetryGenerator.config.logLevel | quote }}
+

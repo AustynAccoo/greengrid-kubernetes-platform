@@ -48,6 +48,8 @@ Major dependencies are deliberately limited: FastAPI supplies the API framework,
 
 For secure local containers, use `make build` and `make run`. See [docs/local-containers.md](docs/local-containers.md) for the container security model, configuration, verification, and cleanup workflow.
 
+The Kubernetes workload layer is packaged in `helm/greengrid-platform`. See [the chart documentation](helm/greengrid-platform/README.md) for resource behavior, environment overlays, security controls, and local validation. This repository does not install the chart as part of validation.
+
 ## Deployment
 
 Deployment instructions will be added with the platform implementation. This application task creates no cloud or Kubernetes resources.

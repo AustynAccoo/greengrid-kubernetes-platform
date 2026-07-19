@@ -1,0 +1,22 @@
+telemetryApi:
+  replicaCount: 3
+  config: {logLevel: warning}
+  resources:
+    requests: {cpu: 500m, memory: 512Mi}
+    limits: {cpu: "2", memory: 1Gi}
+  autoscaling:
+    minReplicas: 3
+    maxReplicas: 8
+    targetCPUUtilizationPercentage: 65
+    behavior:
+      scaleUp: {stabilizationWindowSeconds: 30, percent: 50, periodSeconds: 60}
+      scaleDown: {stabilizationWindowSeconds: 600, percent: 25, periodSeconds: 60}
+  podDisruptionBudget: {minAvailable: 2}
+telemetryGenerator:
+  replicaCount: 2
+  config: {logLevel: warning, intervalSeconds: 5}
+  resources:
+    requests: {cpu: 200m, memory: 256Mi}
+    limits: {cpu: "1", memory: 512Mi}
+resourceQuota:
+  hard: {requests.cpu: "8", requests.memory: 12Gi, limits.cpu: "20", limits.memory: 24Gi, pods: "30", services: "10", configmaps: "15"}

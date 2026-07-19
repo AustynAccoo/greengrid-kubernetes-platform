@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "greengrid.generatorName" . }}
+  labels:
+    {{- include "greengrid.labels" . | nindent 4 }}
+    app.kubernetes.io/component: telemetry-generator
+spec:
+  replicas: {{ .Values.telemetryGenerator.replicaCount }}
+  strategy: {type: RollingUpdate, rollingUpdate: {maxUnavailable: 0, maxSurge: 1}}
+  selector:
+    matchLabels:
+      {{- include "greengrid.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: telemetry-generator
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmaps.yaml") . | sha256sum }}
+        {{- with .Values.telemetryGenerator.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "greengrid.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: telemetry-generator
+        {{- with .Values.telemetryGenerator.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "greengrid.generatorName" . }}
+      automountServiceAccountToken: false
+      hostNetwork: false
+      hostPID: false
+      hostIPC: false
+      enableServiceLinks: false
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: telemetry-generator
+          image: {{ include "greengrid.image" (list .Values.telemetryGenerator.image.repository .Values.telemetryGenerator.image.tag) | quote }}
+          imagePullPolicy: {{ .Values.telemetryGenerator.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          envFrom:
+            - configMapRef: {name: {{ include "greengrid.generatorName" . }}}
+          startupProbe:
+            exec: {command: [python, -c, {{ include "greengrid.generatorHealthCommand" . | quote }}]}
+            initialDelaySeconds: {{ .Values.telemetryGenerator.probes.startup.initialDelaySeconds }}
+            periodSeconds: {{ .Values.telemetryGenerator.probes.startup.periodSeconds }}
+            timeoutSeconds: {{ .Values.telemetryGenerator.probes.startup.timeoutSeconds }}
+            failureThreshold: {{ .Values.telemetryGenerator.probes.startup.failureThreshold }}
+          readinessProbe:
+            exec: {command: [python, -c, {{ include "greengrid.generatorHealthCommand" . | quote }}]}
+            initialDelaySeconds: {{ .Values.telemetryGenerator.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.telemetryGenerator.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.telemetryGenerator.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.telemetryGenerator.probes.readiness.failureThreshold }}
+          livenessProbe:
+            exec: {command: [python, -c, {{ include "greengrid.generatorHealthCommand" . | quote }}]}
+            initialDelaySeconds: {{ .Values.telemetryGenerator.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.telemetryGenerator.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.telemetryGenerator.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.telemetryGenerator.probes.liveness.failureThreshold }}
+          resources:
+            {{- toYaml .Values.telemetryGenerator.resources | nindent 12 }}
+          volumeMounts:
+            - {name: tmp, mountPath: /tmp}
+      volumes:
+        - name: tmp
+          emptyDir: {medium: Memory, sizeLimit: 32Mi}

@@ -1,0 +1,17 @@
+telemetryApi:
+  replicaCount: 1
+  config: {logLevel: debug}
+  resources:
+    requests: {cpu: 50m, memory: 64Mi}
+    limits: {cpu: 250m, memory: 192Mi}
+  autoscaling: {minReplicas: 1, maxReplicas: 3}
+  podDisruptionBudget: {minAvailable: 0}
+telemetryGenerator:
+  replicaCount: 1
+  config: {logLevel: debug, intervalSeconds: 2}
+  resources:
+    requests: {cpu: 25m, memory: 48Mi}
+    limits: {cpu: 150m, memory: 96Mi}
+resourceQuota:
+  hard: {requests.cpu: 500m, requests.memory: 512Mi, limits.cpu: "1", limits.memory: 1Gi, pods: "8"}
+
