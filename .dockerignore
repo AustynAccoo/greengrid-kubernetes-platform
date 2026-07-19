@@ -1,15 +1,14 @@
-.git
-.github
-.terraform
-**/.terraform
-**/__pycache__
-**/.pytest_cache
-**/.venv
-*.tfstate*
-*.tfplan
-.env*
-docs
-tests
-dist
-build
-
+# Root-context safeguard. Service images use their own allowlist-based
+# .dockerignore files and service-specific build contexts.
+**
+!applications/
+!applications/telemetry-api/
+!applications/telemetry-api/Dockerfile
+!applications/telemetry-api/requirements.txt
+!applications/telemetry-api/src/
+!applications/telemetry-api/src/**
+!applications/telemetry-generator/
+!applications/telemetry-generator/Dockerfile
+!applications/telemetry-generator/requirements.txt
+!applications/telemetry-generator/src/
+!applications/telemetry-generator/src/**

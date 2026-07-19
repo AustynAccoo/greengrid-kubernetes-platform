@@ -2,7 +2,7 @@
 
 ## Project overview
 
-GreenGrid is an employer-facing portfolio project demonstrating production-style Kubernetes platform engineering for energy telemetry on Google Kubernetes Engine (GKE). This initial repository contains only the project foundation; application and infrastructure implementation will follow in reviewed increments.
+GreenGrid is an employer-facing portfolio project demonstrating production-style Kubernetes platform engineering for energy telemetry on Google Kubernetes Engine (GKE). Its local application layer contains a FastAPI telemetry service and a fictional telemetry generator; infrastructure implementation remains separate.
 
 ## Business context
 
@@ -32,9 +32,25 @@ Testing will be layered across code, containers, Terraform, Helm, policy, integr
 
 Pull requests will run validation gates. A commit-SHA-tagged artifact will be built once and promoted unchanged through environments by reviewed GitOps configuration updates. See [docs/deployment-process.md](docs/deployment-process.md).
 
+## Local development
+
+Python 3.12 is required. Create a local environment, install the pinned dependencies, and run the quality gates:
+
+```sh
+python3.12 -m venv .venv
+.venv/bin/python -m pip install -r requirements-dev.txt
+make validate
+```
+
+Start the API with `make run-api`, then start the generator in another terminal with `make run-generator`. The API listens on port 8000 and publishes interactive OpenAPI documentation at `/docs`.
+
+Major dependencies are deliberately limited: FastAPI supplies the API framework, Pydantic performs schema validation, Uvicorn serves ASGI locally, HTTPX provides the generator's timeout-aware HTTP client, Pytest runs unit tests, and Ruff handles formatting and linting. Runtime dependencies are pinned per service; development-only dependencies are pinned in `requirements-dev.txt`.
+
+For secure local containers, use `make build` and `make run`. See [docs/local-containers.md](docs/local-containers.md) for the container security model, configuration, verification, and cleanup workflow.
+
 ## Deployment
 
-Deployment instructions will be added with the implementation. No deployable resources exist in this foundation.
+Deployment instructions will be added with the platform implementation. This application task creates no cloud or Kubernetes resources.
 
 ## Troubleshooting demonstrations
 
@@ -62,4 +78,3 @@ Cleanup instructions will be documented before any infrastructure is deployed. D
 ## Production improvements
 
 Future production-oriented extensions may include multi-region design, stronger policy enforcement, managed secrets, disaster recovery exercises, SLOs, advanced observability, and independent GCP projects and organizational controls.
-

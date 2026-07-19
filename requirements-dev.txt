@@ -1,0 +1,6 @@
+-r applications/telemetry-api/requirements.txt
+-r applications/telemetry-generator/requirements.txt
+
+pytest==8.4.1
+ruff==0.12.1
+

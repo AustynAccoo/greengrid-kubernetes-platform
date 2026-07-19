@@ -1,0 +1,80 @@
+name: greengrid
+
+services:
+  telemetry-api:
+    image: greengrid-telemetry-api:local
+    build:
+      context: applications/telemetry-api
+      dockerfile: Dockerfile
+    init: true
+    restart: unless-stopped
+    ports:
+      - "${TELEMETRY_API_HOST_PORT:-8000}:8000"
+    networks:
+      - greengrid-internal
+      - greengrid-edge
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    cpus: 0.50
+    mem_limit: 256m
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=2).read()"
+      interval: 5s
+      timeout: 3s
+      start_period: 10s
+      retries: 5
+
+  telemetry-generator:
+    image: greengrid-telemetry-generator:local
+    build:
+      context: applications/telemetry-generator
+      dockerfile: Dockerfile
+    init: true
+    restart: unless-stopped
+    depends_on:
+      telemetry-api:
+        condition: service_healthy
+    environment:
+      TELEMETRY_API_URL: http://telemetry-api:8000
+      TELEMETRY_INTERVAL_SECONDS: "${TELEMETRY_INTERVAL_SECONDS:-5}"
+      TELEMETRY_REQUEST_TIMEOUT_SECONDS: "${TELEMETRY_REQUEST_TIMEOUT_SECONDS:-5}"
+      TELEMETRY_MAX_RETRIES: "${TELEMETRY_MAX_RETRIES:-3}"
+      TELEMETRY_INITIAL_BACKOFF_SECONDS: "${TELEMETRY_INITIAL_BACKOFF_SECONDS:-0.5}"
+      TELEMETRY_GENERATOR_HEALTH_FILE: /tmp/greengrid-generator-healthy
+    networks:
+      - greengrid-internal
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 64
+    cpus: 0.25
+    mem_limit: 128m
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import os,time; path='/tmp/greengrid-generator-healthy'; assert time.time()-os.path.getmtime(path) < 30"
+      interval: 5s
+      timeout: 3s
+      start_period: 15s
+      retries: 5
+
+networks:
+  greengrid-internal:
+    internal: true
+  greengrid-edge:
