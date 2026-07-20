@@ -1,0 +1,8 @@
+# Copy to an untracked terraform.tfvars and replace placeholders locally.
+project_id = "example-greengrid-dev"
+
+# Optional safe overrides:
+# node_min_count      = 1
+# node_max_count      = 3
+# deletion_protection = false
+

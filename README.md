@@ -50,6 +50,8 @@ For secure local containers, use `make build` and `make run`. See [docs/local-co
 
 The Kubernetes workload layer is packaged in `helm/greengrid-platform`. See [the chart documentation](helm/greengrid-platform/README.md) for resource behavior, environment overlays, security controls, and local validation. This repository does not install the chart as part of validation.
 
+The GCP development foundation is composed from reusable modules under `terraform/` and validated without applying infrastructure. See [docs/terraform-architecture.md](docs/terraform-architecture.md), [docs/gke-networking.md](docs/gke-networking.md), [docs/gcp-iam.md](docs/gcp-iam.md), and [docs/terraform-state.md](docs/terraform-state.md). Only development is deployable; staging and production remain documented environment patterns.
+
 ## Deployment
 
 Deployment instructions will be added with the platform implementation. This application task creates no cloud or Kubernetes resources.

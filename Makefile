@@ -5,11 +5,12 @@ VENV := .venv
 BIN := $(VENV)/bin
 HELM_CHART := helm/greengrid-platform
 HELM_RENDER_DIR := /tmp/greengrid-helm-rendered
+TERRAFORM_DEV := terraform/environments/dev
 
-.PHONY: help install validate test format lint build run stop logs verify clean run-api run-generator helm-lint helm-template-dev helm-template-staging helm-template-prod helm-template-all helm-dry-run helm-security helm-verify
+.PHONY: help install validate test format lint build run stop logs verify clean run-api run-generator helm-lint helm-template-dev helm-template-staging helm-template-prod helm-template-all helm-dry-run helm-security helm-verify terraform-format terraform-format-check terraform-init terraform-validate terraform-plan terraform-security-check terraform-verify
 
 help: ## List local application commands
-	@echo "GreenGrid commands: install format lint test build run stop logs verify clean helm-verify"
+	@echo "GreenGrid commands: install format lint test build run stop logs verify clean helm-verify terraform-verify"
 
 install: ## Create the Python 3.12 environment and install pinned dependencies
 	@test -x $(BIN)/python || $(PYTHON) -m venv $(VENV)
@@ -88,3 +89,24 @@ helm-security: helm-template-all ## Verify security invariants in every rendered
 	done
 
 helm-verify: helm-lint helm-template-all helm-dry-run helm-security ## Run all chart validation gates
+
+terraform-format: ## Format all Terraform configuration
+	terraform fmt -recursive terraform
+
+terraform-format-check: ## Check Terraform formatting without changing files
+	terraform fmt -check -recursive terraform
+
+terraform-init: ## Initialize development providers without a remote backend
+	terraform -chdir=$(TERRAFORM_DEV) init -backend=false
+
+terraform-validate: ## Validate the development Terraform configuration
+	terraform -chdir=$(TERRAFORM_DEV) validate
+
+terraform-plan: ## Create a non-applying development plan; requires PROJECT_ID
+	@test -n "$(PROJECT_ID)" || { echo "PROJECT_ID is required: make terraform-plan PROJECT_ID=example-project-id" >&2; exit 2; }
+	terraform -chdir=$(TERRAFORM_DEV) plan -input=false -var="project_id=$(PROJECT_ID)"
+
+terraform-security-check: ## Scan Terraform for prohibited security patterns
+	./scripts/verify-terraform-security.sh
+
+terraform-verify: terraform-format-check terraform-init terraform-validate terraform-security-check ## Run safe Terraform gates; never applies or destroys

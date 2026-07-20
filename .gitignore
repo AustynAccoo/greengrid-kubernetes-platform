@@ -21,11 +21,15 @@ htmlcov/
 *.tfstate
 *.tfstate.*
 *.tfplan
+*.tfvars
+*.tfvars.json
 crash.log
 override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
+application_default_credentials.json
+credentials.json
 
 # Helm and generated output
 *.tgz
@@ -41,3 +45,7 @@ build/
 *.p12
 *.json.key
 
+# Terraform plan files
+tfplan
+*.tfplan
+*.plan

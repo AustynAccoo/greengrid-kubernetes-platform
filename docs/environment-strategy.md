@@ -14,3 +14,13 @@ Production rollback restores a previously verified GitOps revision and immutable
 
 For portfolio cost control, environments may initially share carefully isolated infrastructure. In a real organization, development, staging, and production would be conceptually separated into different GCP projects, with distinct IAM, quotas, billing visibility, Workload Identity bindings, networks or controlled connectivity, and blast radii.
 
+## Terraform environment model
+
+```text
+GCP organization
+├── greengrid-dev project
+├── greengrid-staging project
+└── greengrid-prod project
+```
+
+Only the development Terraform root is deployable in the current scope. Development uses a small node pool, debug application configuration, faster iteration, controlled deletion, and lower availability. Staging would use production-like sizing and security with separate state and identity, integration and operational testing, and approval before promotion. Production would use regional availability, stricter IAM, deletion protection, controlled maintenance, stronger observability, backup/recovery, separate state and identity, and explicit approval before deployment.
