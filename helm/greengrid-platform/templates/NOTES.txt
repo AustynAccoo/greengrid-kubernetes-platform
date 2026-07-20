@@ -1,0 +1,9 @@
+GreenGrid {{ .Chart.AppVersion }} has been rendered for namespace {{ .Release.Namespace }}.
+
+The chart is namespace-scoped. A platform owner should create and label the namespace:
+  kubectl create namespace {{ .Release.Namespace }}
+  kubectl label namespace {{ .Release.Namespace }} pod-security.kubernetes.io/enforce=restricted
+
+The API ClusterIP is {{ include "greengrid.apiName" . }}:{{ .Values.telemetryApi.service.port }}.
+Run `helm test {{ .Release.Name }} --namespace {{ .Release.Namespace }}` only after an approved installation.
+

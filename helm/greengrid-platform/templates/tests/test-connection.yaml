@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "greengrid.fullname" . }}-test-connection
+  labels:
+    {{- include "greengrid.labels" . | nindent 4 }}
+    app.kubernetes.io/component: helm-test
+  annotations:
+    helm.sh/hook: test
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  serviceAccountName: {{ include "greengrid.apiName" . }}
+  automountServiceAccountToken: false
+  hostNetwork: false
+  hostPID: false
+  hostIPC: false
+  securityContext:
+    {{- toYaml .Values.podSecurityContext | nindent 4 }}
+  containers:
+    - name: health-check
+      image: {{ include "greengrid.image" (list .Values.telemetryApi.image.repository .Values.telemetryApi.image.tag) | quote }}
+      imagePullPolicy: {{ .Values.telemetryApi.image.pullPolicy }}
+      command: [python, -c, {{ printf "import urllib.request; urllib.request.urlopen('http://%s:%v/health/ready', timeout=5).read()" (include "greengrid.apiName" .) .Values.telemetryApi.service.port | quote }}]
+      securityContext:
+        {{- toYaml .Values.containerSecurityContext | nindent 8 }}
+      resources:
+        requests: {cpu: 10m, memory: 32Mi}
+        limits: {cpu: 50m, memory: 64Mi}
+

@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "greengrid.apiName" . }}
+  labels:
+    {{- include "greengrid.labels" . | nindent 4 }}
+    app.kubernetes.io/component: telemetry-api
+spec:
+  replicas: {{ .Values.telemetryApi.replicaCount }}
+  strategy: {type: RollingUpdate, rollingUpdate: {maxUnavailable: 0, maxSurge: 1}}
+  selector:
+    matchLabels:
+      {{- include "greengrid.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: telemetry-api
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmaps.yaml") . | sha256sum }}
+        {{- with .Values.telemetryApi.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "greengrid.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: telemetry-api
+        {{- with .Values.telemetryApi.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "greengrid.apiName" . }}
+      automountServiceAccountToken: false
+      hostNetwork: false
+      hostPID: false
+      hostIPC: false
+      enableServiceLinks: false
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: telemetry-api
+          image: {{ include "greengrid.image" (list .Values.telemetryApi.image.repository .Values.telemetryApi.image.tag) | quote }}
+          imagePullPolicy: {{ .Values.telemetryApi.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          envFrom:
+            - configMapRef: {name: {{ include "greengrid.apiName" . }}}
+          ports:
+            - {name: http, containerPort: 8000, protocol: TCP}
+          startupProbe:
+            httpGet: {path: {{ .Values.telemetryApi.probes.startup.path }}, port: http}
+            initialDelaySeconds: {{ .Values.telemetryApi.probes.startup.initialDelaySeconds }}
+            periodSeconds: {{ .Values.telemetryApi.probes.startup.periodSeconds }}
+            timeoutSeconds: {{ .Values.telemetryApi.probes.startup.timeoutSeconds }}
+            failureThreshold: {{ .Values.telemetryApi.probes.startup.failureThreshold }}
+          readinessProbe:
+            httpGet: {path: {{ .Values.telemetryApi.probes.readiness.path }}, port: http}
+            initialDelaySeconds: {{ .Values.telemetryApi.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.telemetryApi.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.telemetryApi.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.telemetryApi.probes.readiness.failureThreshold }}
+          livenessProbe:
+            httpGet: {path: {{ .Values.telemetryApi.probes.liveness.path }}, port: http}
+            initialDelaySeconds: {{ .Values.telemetryApi.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.telemetryApi.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.telemetryApi.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.telemetryApi.probes.liveness.failureThreshold }}
+          resources:
+            {{- toYaml .Values.telemetryApi.resources | nindent 12 }}
+          volumeMounts:
+            - {name: tmp, mountPath: /tmp}
+      volumes:
+        - name: tmp
+          emptyDir: {medium: Memory, sizeLimit: 32Mi}
+

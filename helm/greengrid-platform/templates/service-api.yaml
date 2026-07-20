@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "greengrid.apiName" . }}
+  labels:
+    {{- include "greengrid.labels" . | nindent 4 }}
+    app.kubernetes.io/component: telemetry-api
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "greengrid.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: telemetry-api
+  ports:
+    - {name: http, port: {{ .Values.telemetryApi.service.port }}, targetPort: http, protocol: TCP}
