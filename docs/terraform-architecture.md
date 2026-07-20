@@ -1,0 +1,19 @@
+# Terraform Architecture
+
+The deployable development root composes five reusable modules:
+
+```text
+project-services
+  ├── network
+  ├── artifact-registry ── iam
+  └──────────────────────── gke
+network ─────────────────── gke
+iam ─────────────────────── gke
+```
+
+`project-services` enables only required APIs. `network` creates VPC-native address space. `artifact-registry` stores the two service images. `iam` creates the node identity and repository pull grant. `gke` consumes those outputs to create a zonal cluster and separate node pool. Explicit dependencies ensure APIs exist before dependent resources are planned for creation.
+
+The development root owns persistent infrastructure. Helm remains responsible for Kubernetes workloads; Terraform does not create Kubernetes resources. Staging and production reuse module contracts but require independent roots, state, identities, projects, review, and approval.
+
+Rollback normally means reverting reviewed Terraform configuration and inspecting a new plan. Infrastructure changes are not assumed reversible: network ranges, cluster topology, deletion protection, and destructive replacements require migration plans. Cleanup requires an reviewed destroy plan and explicit approval; no destroy target is included in the Makefile.
+
