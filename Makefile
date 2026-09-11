@@ -6,7 +6,7 @@ BIN := $(VENV)/bin
 HELM_CHART := helm/greengrid-platform
 HELM_RENDER_DIR := /tmp/greengrid-helm-rendered
 TERRAFORM_DEV := terraform/environments/dev
-PYTHON_SOURCES := applications tests scripts/verify_helm_security.py
+PYTHON_SOURCES := applications tests scripts/verify_helm_security.py scripts/verify_terraform_security.py
 
 .PHONY: help install validate dependency-audit test format lint build run stop logs verify clean run-api run-generator helm-lint helm-template-dev helm-template-staging helm-template-prod helm-template-all helm-dry-run helm-security helm-verify terraform-format terraform-format-check terraform-init terraform-validate terraform-plan terraform-security-check terraform-verify
 
@@ -111,6 +111,6 @@ terraform-plan: ## Create a non-applying development plan; requires PROJECT_ID
 	terraform -chdir=$(TERRAFORM_DEV) plan -input=false -var="project_id=$(PROJECT_ID)"
 
 terraform-security-check: ## Scan Terraform for prohibited security patterns
-	./scripts/verify-terraform-security.sh
+	$(PYTHON) scripts/verify_terraform_security.py
 
 terraform-verify: terraform-format-check terraform-init terraform-validate terraform-security-check ## Run safe Terraform gates; never applies or destroys
