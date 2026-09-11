@@ -1,13 +1,12 @@
 apiVersion: v2
 name: greengrid-platform
-description: Secure local Kubernetes workloads for the GreenGrid telemetry platform
+description: Secure Kubernetes workloads for the GreenGrid telemetry platform
 type: application
-version: 0.1.0
+version: 0.2.0
 appVersion: "0.1.0"
 kubeVersion: ">=1.30.0-0"
 home: https://github.com/AustynAccoo/greengrid-kubernetes-platform
 sources:
   - https://github.com/AustynAccoo/greengrid-kubernetes-platform
 maintainers:
-  - name: GreenGrid Platform Team
-
+  - name: Austyn Accoo

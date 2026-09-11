@@ -37,7 +37,7 @@ resource "google_container_cluster" "this" {
   monitoring_config {
     enable_components = ["SYSTEM_COMPONENTS"]
     managed_prometheus {
-      enabled = false
+      enabled = true
     }
   }
 

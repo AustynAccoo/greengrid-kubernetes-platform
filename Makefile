@@ -6,11 +6,12 @@ BIN := $(VENV)/bin
 HELM_CHART := helm/greengrid-platform
 HELM_RENDER_DIR := /tmp/greengrid-helm-rendered
 TERRAFORM_DEV := terraform/environments/dev
+PYTHON_SOURCES := applications tests scripts/verify_helm_security.py
 
-.PHONY: help install validate test format lint build run stop logs verify clean run-api run-generator helm-lint helm-template-dev helm-template-staging helm-template-prod helm-template-all helm-dry-run helm-security helm-verify terraform-format terraform-format-check terraform-init terraform-validate terraform-plan terraform-security-check terraform-verify
+.PHONY: help install validate dependency-audit test format lint build run stop logs verify clean run-api run-generator helm-lint helm-template-dev helm-template-staging helm-template-prod helm-template-all helm-dry-run helm-security helm-verify terraform-format terraform-format-check terraform-init terraform-validate terraform-plan terraform-security-check terraform-verify
 
 help: ## List local application commands
-	@echo "GreenGrid commands: install format lint test build run stop logs verify clean helm-verify terraform-verify"
+	@echo "GreenGrid commands: install format lint test dependency-audit build run stop logs verify clean helm-verify terraform-verify"
 
 install: ## Create the Python 3.12 environment and install pinned dependencies
 	@test -x $(BIN)/python || $(PYTHON) -m venv $(VENV)
@@ -19,14 +20,17 @@ install: ## Create the Python 3.12 environment and install pinned dependencies
 
 validate: format lint test ## Run all local application quality gates
 
+dependency-audit: ## Fail on known vulnerabilities in the resolved Python dependency set
+	$(BIN)/pip-audit --requirement requirements-dev.txt
+
 test: ## Run unit tests
 	PYTHONPATH=applications/telemetry-api/src:applications/telemetry-generator/src $(BIN)/pytest
 
 format: ## Check source formatting
-	$(BIN)/ruff format --check applications tests
+	$(BIN)/ruff format --check $(PYTHON_SOURCES)
 
 lint: ## Run static lint checks
-	$(BIN)/ruff check applications tests
+	$(BIN)/ruff check $(PYTHON_SOURCES)
 
 build: ## Build both pinned local container images
 	docker compose build
@@ -85,7 +89,7 @@ helm-dry-run: helm-template-all ## Attempt offline kubectl client-side validatio
 
 helm-security: helm-template-all ## Verify security invariants in every rendered environment
 	@for manifest in $(HELM_RENDER_DIR)/dev.yaml $(HELM_RENDER_DIR)/staging.yaml $(HELM_RENDER_DIR)/prod.yaml; do \
-		./scripts/verify-helm-security.rb $$manifest; \
+		$(BIN)/python scripts/verify_helm_security.py $$manifest; \
 	done
 
 helm-verify: helm-lint helm-template-all helm-dry-run helm-security ## Run all chart validation gates

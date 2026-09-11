@@ -1,84 +1,101 @@
 # GreenGrid: Secure Kubernetes Platform for Energy Telemetry
 
-## Project overview
+GreenGrid is an employer-facing platform-engineering project built around a small energy-telemetry workload. The application is intentionally simple; the engineering focus is repeatable GKE infrastructure, hardened Kubernetes workloads, controlled change, observability, and evidence-driven troubleshooting.
 
-GreenGrid is an employer-facing portfolio project demonstrating production-style Kubernetes platform engineering for energy telemetry on Google Kubernetes Engine (GKE). Its local application layer contains a FastAPI telemetry service and a fictional telemetry generator; infrastructure implementation remains separate.
+## What is implemented
 
-## Business context
+| Layer | Current state |
+| --- | --- |
+| Application | FastAPI telemetry API plus a synthetic telemetry generator, structured JSON logs, health endpoints, Prometheus metrics, bounded retention, retry/backoff, and 14 contract/unit tests |
+| Containers | Digest-pinned Python base, non-root UID/GID 10001, read-only root filesystems, dropped capabilities, bounded resources, health checks, and a runtime security verification script |
+| GCP infrastructure | Reusable Terraform modules for required APIs, custom VPC/subnet, Artifact Registry, least-privilege node IAM, and one zonal Standard GKE development cluster in `us-east4-b` |
+| Kubernetes | One Helm chart with dev/staging/prod values, 18 rendered resources per environment, probes, HPA, PDB, quotas, dedicated ServiceAccounts, and default-deny network policy |
+| Observability | GKE managed Prometheus collection, a namespaced `PodMonitoring` target for `/metrics`, restricted collector ingress, GKE system/workload logging, and a development-only HPA load-simulation endpoint |
+| Delivery controls | Four GitHub Actions gates for application/dependency checks, Helm policy checks, Terraform checks, and the running container contract; Dependabot covers actions, Python, Docker, and Terraform |
 
-The platform will model ingestion and delivery of operational energy telemetry while emphasizing reliability, traceability, security, and controlled change.
+The development infrastructure and workload path have been deployed and exercised. This repository does **not** claim that staging, production, Argo CD, a durable data store, public ingress, or multi-region recovery are live. Those are explicit production extensions, not hidden gaps.
 
-## Architecture
+## Architecture at a glance
 
-The planned solution uses Python services packaged as Docker images, GKE infrastructure managed by Terraform, Helm packaging, Argo CD reconciliation, and GitHub Actions validation and delivery. See [docs/architecture.md](docs/architecture.md).
-
-## Environment strategy
-
-Changes progress from development to staging to production using separate configuration, immutable artifacts, validation, review, and approvals. See [docs/environment-strategy.md](docs/environment-strategy.md).
-
-## Demonstrated capabilities
-
-Planned capabilities include infrastructure as code, secure containers, Kubernetes operations, GitOps, automated testing, observability, incident-oriented troubleshooting, and auditable promotion.
-
-## Security controls
-
-The project will apply least privilege, non-root containers, Workload Identity, dedicated Kubernetes ServiceAccounts, default-deny networking, secret hygiene, image immutability, and supply-chain validation. See [docs/security.md](docs/security.md).
-
-## Testing strategy
-
-Testing will be layered across code, containers, Terraform, Helm, policy, integration, and post-deployment verification. See [docs/testing-strategy.md](docs/testing-strategy.md).
-
-## CI/CD and promotion workflow
-
-Pull requests will run validation gates. A commit-SHA-tagged artifact will be built once and promoted unchanged through environments by reviewed GitOps configuration updates. See [docs/deployment-process.md](docs/deployment-process.md).
-
-## Local development
-
-Python 3.12 is required. Create a local environment, install the pinned dependencies, and run the quality gates:
-
-```sh
-python3.12 -m venv .venv
-.venv/bin/python -m pip install -r requirements-dev.txt
-make validate
+```mermaid
+flowchart TD
+    GH["GitHub pull request"] --> CI["CI policy gates"]
+    CI --> AR["Artifact Registry"]
+    TF["Terraform"] --> GKE["GKE Standard"]
+    AR --> GKE
+    GKE --> HELM["Helm release"]
+    HELM --> GEN["Telemetry generator"]
+    GEN --> SVC["ClusterIP service"]
+    SVC --> API["Telemetry API"]
+    GMP["Managed Prometheus"] --> API
+    GMP --> CM["Cloud Monitoring"]
 ```
 
-Start the API with `make run-api`, then start the generator in another terminal with `make run-generator`. The API listens on port 8000 and publishes interactive OpenAPI documentation at `/docs`.
+Terraform owns persistent GCP resources. Helm owns namespace-scoped Kubernetes resources. The generator resolves the internal Service name and submits telemetry over TCP 8000. The API validates and retains a bounded in-memory working set, exposes health and metrics endpoints, and has no external Service. Managed Prometheus collectors scrape each API pod and push metrics to Cloud Monitoring.
 
-Major dependencies are deliberately limited: FastAPI supplies the API framework, Pydantic performs schema validation, Uvicorn serves ASGI locally, HTTPX provides the generator's timeout-aware HTTP client, Pytest runs unit tests, and Ruff handles formatting and linting. Runtime dependencies are pinned per service; development-only dependencies are pinned in `requirements-dev.txt`.
+See [the detailed architecture](docs/architecture.md), [the interview walkthrough](docs/interview-walkthrough.md), and [the troubleshooting runbook](docs/runbooks/gke-troubleshooting.md).
 
-For secure local containers, use `make build` and `make run`. See [docs/local-containers.md](docs/local-containers.md) for the container security model, configuration, verification, and cleanup workflow.
+## Security and reliability controls
 
-The Kubernetes workload layer is packaged in `helm/greengrid-platform`. See [the chart documentation](helm/greengrid-platform/README.md) for resource behavior, environment overlays, security controls, and local validation. This repository does not install the chart as part of validation.
+- VPC-native GKE with Dataplane V2, Shielded Nodes, Secure Boot, auto-repair, auto-upgrade, and surge upgrades.
+- Dedicated keyless node identity plus Workload Identity Federation for GKE; no service-account keys.
+- Dedicated Kubernetes ServiceAccounts with token automount disabled.
+- Restricted-style pod/container security contexts, immutable Git-SHA application image tags, and no `latest` tags.
+- Default-deny ingress/egress, narrow DNS, generator-to-API, Helm-test-to-API, and managed-collector-to-API paths.
+- Explicit requests/limits, namespace quota/limit range, three probe types, CPU HPA, and environment-aware PDBs.
+- Read-only CI permissions, commit-pinned actions, vulnerability auditing, and automated manifest policy assertions.
 
-The GCP development foundation is composed from reusable modules under `terraform/` and validated without applying infrastructure. See [docs/terraform-architecture.md](docs/terraform-architecture.md), [docs/gke-networking.md](docs/gke-networking.md), [docs/gcp-iam.md](docs/gcp-iam.md), and [docs/terraform-state.md](docs/terraform-state.md). Only development is deployable; staging and production remain documented environment patterns.
+## Local validation
 
-## Deployment
+Python 3.12 is required.
 
-Deployment instructions will be added with the platform implementation. This application task creates no cloud or Kubernetes resources.
+```sh
+make install
+make validate
+make dependency-audit
+make helm-verify
+make terraform-verify
+```
 
-## Troubleshooting demonstrations
+`make terraform-verify` initializes with `-backend=false` and never plans, applies, or destroys infrastructure. `make helm-verify` renders and verifies dev, staging, and production without installing them.
 
-Future scenarios will demonstrate diagnosis of failed probes, resource pressure, network-policy failures, rollout problems, and telemetry delivery issues.
+To verify the complete local container path:
+
+```sh
+make verify
+```
+
+That command builds both images, waits for health, confirms telemetry delivery, verifies UID/GID 10001, proves the root filesystems are read-only, checks the writable `/tmp` mounts, and inspects the dropped-capability/no-new-privileges runtime settings.
+
+## Safe development deployment outline
+
+Cloud mutation is intentionally separate from validation. After reviewing a Terraform plan and receiving explicit approval:
+
+1. Provision or update the development GCP foundation from `terraform/environments/dev`.
+2. Build each image once, tag it as `git-<40-character-commit-sha>`, and publish it to the approved repository.
+3. Create and label `greengrid-dev` with the Kubernetes restricted Pod Security Standard.
+4. Install or upgrade the Helm chart with the development values and immutable image tags.
+5. Verify rollouts, `helm test`, telemetry flow, HPA state, PodMonitoring target health, logs, and PromQL results.
+
+Exact commands and rollback checks are in [the deployment process](docs/deployment-process.md).
+
+## Problems this project demonstrates
+
+- **Default deny broke service discovery:** the generator entered a restart loop because DNS egress was denied. Logs and endpoint checks isolated DNS from application failure; a narrowly scoped TCP/UDP 53 policy restored name resolution while preserving default deny.
+- **Dependencies drifted into known advisories:** a vulnerability audit found the old Starlette/Pytest stack was no longer clean. Dependencies and the digest-pinned Python base were upgraded, tests were expanded, and the audit became a required CI gate.
+- **Metrics existed but were not collected:** the API exposed valid Prometheus text, while GKE managed collection was disabled and no scrape resource existed. Terraform now enables collection, Helm creates `PodMonitoring`, the network policy admits only Standard GKE collectors, and scrape limits bound cost/cardinality.
+- **Architecture claims exceeded automation:** documentation described CI and future GitOps as though they were complete. The repository now contains enforceable CI gates and clearly labels Argo CD and live higher environments as future work.
 
 ## Repository structure
 
-- `applications/`: planned telemetry API and generator services
-- `terraform/`: reusable modules and environment roots
-- `helm/`: platform chart
-- `gitops/`: Argo CD applications and environment configuration
-- `scripts/`: safe automation helpers
-- `docs/`: architecture, security, process, plans, and ADRs
-- `tests/`: cross-component tests
-- `.github/`: workflows and collaboration templates
+- `applications/`: telemetry API and generator source plus hardened Dockerfiles
+- `terraform/`: reusable GCP modules and the deployable development root
+- `helm/`: multi-environment workload chart
+- `.github/`: CI, dependency maintenance, and review templates
+- `scripts/`: container, Helm-policy, and Terraform-security verification
+- `docs/`: architecture, operations, security, ADRs, runbooks, and interview material
+- `tests/`: application, metrics, bounds, and retry behavior
 
-## Cost controls
+## Production boundary
 
-The implementation will use explicit budgets, modest non-production sizing, autoscaling boundaries, short-lived test resources, and documented cleanup procedures. No cloud resources are created by this foundation.
-
-## Cleanup
-
-Cleanup instructions will be documented before any infrastructure is deployed. Destructive operations will require explicit approval.
-
-## Production improvements
-
-Future production-oriented extensions may include multi-region design, stronger policy enforcement, managed secrets, disaster recovery exercises, SLOs, advanced observability, and independent GCP projects and organizational controls.
+A real production version would use separate GCP projects and state, a regional private cluster, controlled egress, durable managed storage, authenticated/TLS ingress, signed-image admission, stronger SLOs/alerts, backups and restore drills, and a reconciler such as Argo CD. See [production improvements](docs/production-improvements.md).

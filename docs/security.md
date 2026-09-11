@@ -11,11 +11,12 @@
 - Tag images with Git commit SHAs, build once, and promote the same digest.
 - Require validation, review, and documented approval for sensitive changes.
 
-## Planned verification
+## Automated verification
 
-CI will eventually include dependency, secret, container, IaC, chart, and policy scanning. Findings will be severity-gated with documented exceptions, owners, and expiry dates. Security decisions with lasting consequences belong in ADRs.
+CI currently enforces Python vulnerability auditing, immutable dependency pins, application tests, container runtime contracts, Terraform prohibited-pattern checks, and rendered Helm assertions. The Helm verifier checks pod security, identities, resources, probes, internal-only Services, exact network peers/ports, and the managed Prometheus scrape contract for all three environment overlays. GitHub Actions use read-only permissions and complete commit-SHA pins.
+
+Secret scanning, image CVE scanning/signing, admission policy, and attestation verification remain production improvements. Findings and exceptions should identify severity, owner, justification, and expiry. Security decisions with lasting consequences belong in ADRs.
 
 ## Incident posture
 
 Response documentation will cover containment, credential rotation, evidence preservation, rollback, communication, and follow-up actions before production readiness is claimed.
-

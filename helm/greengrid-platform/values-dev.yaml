@@ -1,6 +1,6 @@
 telemetryApi:
   replicaCount: 1
-  config: {logLevel: debug}
+  config: {logLevel: debug, loadSimulationEnabled: true}
   resources:
     requests: {cpu: 50m, memory: 64Mi}
     limits: {cpu: 250m, memory: 192Mi}
@@ -14,4 +14,3 @@ telemetryGenerator:
     limits: {cpu: 150m, memory: 96Mi}
 resourceQuota:
   hard: {requests.cpu: 500m, requests.memory: 512Mi, limits.cpu: "1", limits.memory: 1Gi, pods: "8"}
-

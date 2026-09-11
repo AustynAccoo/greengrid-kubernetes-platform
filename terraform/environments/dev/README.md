@@ -20,7 +20,7 @@ For team use, initialize the empty GCS backend with a separately bootstrapped bu
 - Pod CIDR `10.84.0.0/14`
 - Service CIDR `10.88.0.0/20`
 - Public node addresses to avoid Cloud NAT cost; Private Google Access remains enabled
+- GKE managed Prometheus collection with the node identity authorized only to write metrics
 - Deletion protection off by default for controlled portfolio cleanup
 
 The selected node size has enough capacity for GKE system workloads, Dataplane V2, telemetry services, and HPA metrics while remaining modest. Actual scheduling must be checked against rendered Helm requests before deployment.
-

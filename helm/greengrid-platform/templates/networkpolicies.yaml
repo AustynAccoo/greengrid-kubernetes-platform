@@ -40,12 +40,6 @@ spec:
   policyTypes: [Egress]
   egress:
     - to:
-        - namespaceSelector:
-            matchLabels: {{- toYaml .Values.networkPolicy.dns.namespaceLabel | nindent 14 }}
-      ports:
-        - {protocol: UDP, port: 53}
-        - {protocol: TCP, port: 53}
-    - to:
         - podSelector:
             matchLabels:
               {{- include "greengrid.selectorLabels" . | nindent 14 }}
@@ -76,4 +70,26 @@ spec:
               app.kubernetes.io/component: helm-test
       ports:
         - {protocol: TCP, port: 8000}
+{{- if .Values.monitoring.managedPrometheus.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "greengrid.fullname" . }}-managed-prometheus-to-api
+  labels: {{- include "greengrid.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "greengrid.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: telemetry-api
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels: {{- toYaml .Values.networkPolicy.managedPrometheusCollector.namespaceLabel | nindent 14 }}
+          podSelector:
+            matchLabels: {{- toYaml .Values.networkPolicy.managedPrometheusCollector.podLabels | nindent 14 }}
+      ports:
+        - {protocol: TCP, port: 8000}
+{{- end }}
 {{- end }}

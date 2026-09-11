@@ -24,6 +24,8 @@ rg -q 'workload_metadata_config' terraform/modules/gke/main.tf || { echo "secure
 rg -q 'enable_shielded_nodes[[:space:]]*=[[:space:]]*true' terraform/modules/gke/main.tf || { echo "Shielded Nodes missing" >&2; exit 1; }
 rg -q 'service_account[[:space:]]*=[[:space:]]*var.node_service_account_email' terraform/modules/gke/main.tf || { echo "dedicated node service account missing" >&2; exit 1; }
 rg -q 'datapath_provider[[:space:]]*=[[:space:]]*"ADVANCED_DATAPATH"' terraform/modules/gke/main.tf || { echo "Dataplane V2 missing" >&2; exit 1; }
+rg -U -q 'managed_prometheus[[:space:]]*\{[^}]*enabled[[:space:]]*=[[:space:]]*true' terraform/modules/gke/main.tf || { echo "Managed Prometheus collection missing" >&2; exit 1; }
+rg -q '"roles/monitoring.metricWriter"' terraform/modules/iam/main.tf || { echo "Managed Prometheus metric-writer role missing" >&2; exit 1; }
 
 if git ls-files | rg '(\.tfstate($|\.)|\.tfplan$)'; then
   echo "Security check failed: Terraform state or plan is tracked" >&2
@@ -31,4 +33,3 @@ if git ls-files | rg '(\.tfstate($|\.)|\.tfplan$)'; then
 fi
 
 echo "Terraform security checks passed."
-
