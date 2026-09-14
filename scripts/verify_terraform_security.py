@@ -55,6 +55,12 @@ def main() -> None:
     for pattern, message in prohibited:
         reject_pattern(pattern, message, files)
 
+    registry = Path("terraform/modules/artifact-registry/main.tf").read_text()
+    require(
+        bool(re.search(r"docker_config\s*\{\s*immutable_tags\s*=\s*true\s*\}", registry)),
+        "Artifact Registry immutable Docker tags must be enabled",
+    )
+
     gke = Path("terraform/modules/gke/main.tf").read_text()
     iam = Path("terraform/modules/iam/main.tf").read_text()
     require("workload_identity_config" in gke, "Workload Identity missing")

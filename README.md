@@ -9,7 +9,7 @@ GreenGrid is an employer-facing platform-engineering project built around a smal
 | Application | FastAPI telemetry API plus a synthetic telemetry generator, structured JSON logs, health endpoints, Prometheus metrics, bounded retention, retry/backoff, and 14 contract/unit tests |
 | Containers | Digest-pinned Python base, non-root UID/GID 10001, read-only root filesystems, dropped capabilities, bounded resources, health checks, and a runtime security verification script |
 | GCP infrastructure | Reusable Terraform modules for required APIs, custom VPC/subnet, Artifact Registry, least-privilege node IAM, and one zonal Standard GKE development cluster in `us-east4-b` |
-| Kubernetes | One Helm chart with dev/staging/prod values, 18 rendered resources per environment, probes, HPA, PDB, quotas, dedicated ServiceAccounts, and default-deny network policy |
+| Kubernetes | One Helm chart with dev/staging/prod values, 19 rendered resources per environment, probes, HPA, PDB, quotas, dedicated ServiceAccounts, and default-deny network policy |
 | Observability | GKE managed Prometheus collection, a namespaced `PodMonitoring` target for `/metrics`, restricted collector ingress, GKE system/workload logging, and a development-only HPA load-simulation endpoint |
 | Delivery controls | Four GitHub Actions gates for application/dependency checks, Helm policy checks, Terraform checks, and the running container contract; Dependabot covers actions, Python, Docker, and Terraform |
 

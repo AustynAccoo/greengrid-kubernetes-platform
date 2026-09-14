@@ -77,11 +77,7 @@ helm-template-prod: ## Render production manifests locally
 
 helm-template-all: helm-template-dev helm-template-staging helm-template-prod ## Render every environment
 
-helm-dry-run: helm-template-all ## Attempt offline kubectl client-side validation
-	@for manifest in $(HELM_RENDER_DIR)/dev.yaml $(HELM_RENDER_DIR)/staging.yaml $(HELM_RENDER_DIR)/prod.yaml; do \
-		kubectl apply --dry-run=client --validate=false --namespace default --filename $$manifest >/dev/null 2>&1 || \
-		echo "kubectl offline dry-run unavailable for $$manifest; Helm rendering remains authoritative"; \
-	done
+helm-dry-run: helm-template-all ## Validate Helm installation fully offline
 	@helm install greengrid-dev $(HELM_CHART) --namespace greengrid-dev -f $(HELM_CHART)/values-dev.yaml --dry-run=client >/dev/null
 	@helm install greengrid-staging $(HELM_CHART) --namespace greengrid-staging -f $(HELM_CHART)/values-staging.yaml --dry-run=client >/dev/null
 	@helm install greengrid-prod $(HELM_CHART) --namespace greengrid-prod -f $(HELM_CHART)/values-prod.yaml --dry-run=client >/dev/null
@@ -89,7 +85,7 @@ helm-dry-run: helm-template-all ## Attempt offline kubectl client-side validatio
 
 helm-security: helm-template-all ## Verify security invariants in every rendered environment
 	@for manifest in $(HELM_RENDER_DIR)/dev.yaml $(HELM_RENDER_DIR)/staging.yaml $(HELM_RENDER_DIR)/prod.yaml; do \
-		$(BIN)/python scripts/verify_helm_security.py $$manifest; \
+		$(BIN)/python scripts/verify_helm_security.py $$manifest || exit $$?; \
 	done
 
 helm-verify: helm-lint helm-template-all helm-dry-run helm-security ## Run all chart validation gates

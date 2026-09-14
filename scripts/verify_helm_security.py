@@ -137,6 +137,41 @@ def verify_network_policies(policies: list[Manifest]) -> None:
     )
     require(ports(generator_rules[0]) == {("TCP", 8000)}, "generator egress is too broad")
 
+    helm_test = find_policy(policies, "-helm-test-to-api")
+    release_labels = generator.get("spec", {}).get("podSelector", {}).get("matchLabels", {})
+    release_labels = {
+        key: value for key, value in release_labels.items() if key != "app.kubernetes.io/component"
+    }
+    require(
+        set(release_labels) == {"app.kubernetes.io/name", "app.kubernetes.io/instance"},
+        "application selectors must include chart and release labels",
+    )
+    require(
+        helm_test.get("spec")
+        == {
+            "podSelector": {
+                "matchLabels": {**release_labels, "app.kubernetes.io/component": "helm-test"}
+            },
+            "policyTypes": ["Egress"],
+            "egress": [
+                {
+                    "to": [
+                        {
+                            "podSelector": {
+                                "matchLabels": {
+                                    **release_labels,
+                                    "app.kubernetes.io/component": "telemetry-api",
+                                }
+                            }
+                        }
+                    ],
+                    "ports": [{"protocol": "TCP", "port": 8000}],
+                }
+            ],
+        },
+        "Helm test egress must allow only same-namespace, same-release API pods on TCP 8000",
+    )
+
     api = find_policy(policies, "-api-ingress")
     api_rules = api.get("spec", {}).get("ingress", [])
     require(len(api_rules) == 1, "API application ingress must have exactly one rule")
@@ -238,13 +273,14 @@ def main() -> None:
         "PodDisruptionBudget": 1,
         "ResourceQuota": 1,
         "LimitRange": 1,
-        "NetworkPolicy": 5,
+        "NetworkPolicy": 6,
         "PodMonitoring": 1,
         "Pod": 1,
     }
+    require(len(documents) == 19, f"expected 19 resources, found {len(documents)}")
     for kind, expected in required.items():
         actual = len(by_kind.get(kind, []))
-        require(actual >= expected, f"expected {expected}+ {kind}, found {actual}")
+        require(actual == expected, f"expected {expected} {kind}, found {actual}")
 
     for account in by_kind["ServiceAccount"]:
         require(

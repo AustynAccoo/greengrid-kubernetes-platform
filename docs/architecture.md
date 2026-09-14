@@ -57,7 +57,7 @@ The zonal control plane and public development nodes are explicit cost decisions
 
 ## Kubernetes workload layer
 
-Each environment currently renders 18 resources:
+Each environment currently renders 19 resources:
 
 | Resource | Count | Operational purpose |
 | --- | ---: | --- |
@@ -68,7 +68,7 @@ Each environment currently renders 18 resources:
 | HPA | 1 | Scale API pods on CPU utilization relative to requests |
 | PDB | 1 | Bound voluntary disruption according to environment size |
 | ResourceQuota / LimitRange | 2 | Bound namespace consumption and defaults |
-| NetworkPolicies | 5 | Default deny plus four required traffic paths |
+| NetworkPolicies | 6 | Default deny plus five scoped allow policies |
 | PodMonitoring | 1 | Discover and scrape the API metrics endpoint |
 | Helm test Pod | 1 | Verify readiness through the real Service path |
 

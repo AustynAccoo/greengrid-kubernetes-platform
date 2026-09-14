@@ -23,7 +23,7 @@ terraform show <reviewed-plan-file>
 
 Review resource replacements, IAM changes, networking, node count, cost, deletion protection, and provider versions. `terraform apply` requires explicit approval and must apply the reviewed plan rather than silently creating a new one.
 
-The observability hardening change is expected to update the existing cluster to enable managed Prometheus and add `roles/monitoring.metricWriter` to the node identity. Confirm that the plan does not replace the cluster or node pool before approval.
+The anticipated live development plan is **1 addition, 2 in-place updates, zero replacements, and zero deletions**: add `roles/monitoring.metricWriter` to the node identity, enable GKE managed Prometheus in place, and enable Artifact Registry `docker_config.immutable_tags = true` in place. This is an expectation, not a live plan result; confirm it with a separately authorized plan before requesting apply approval.
 
 ## Build-once image flow
 
@@ -34,7 +34,7 @@ Each service image is built from one accepted Git commit. Use a tag in the form 
 <registry>/telemetry-generator:git-<sha>@sha256:<digest>
 ```
 
-The current Helm helper enforces the Git-SHA tag format. A future delivery workflow should update values to full digests after build and promote the same digest.
+Artifact Registry is configured to enforce immutable Docker tags, preventing a published tag from being reassigned to another digest once applied. The current Helm helper enforces the Git-SHA tag format. A future delivery workflow should update values to full digests after build and promote the same digest.
 
 ## Development Helm release
 
@@ -73,7 +73,7 @@ kubectl -n greengrid-dev describe podmonitoring
 Confirm the following:
 
 - Both rollouts complete and Pods are Ready without repeated restarts.
-- The API Service has ready endpoints.
+- The API Service has ready endpoints, and the Helm test succeeds through its explicit same-namespace, same-release TCP 8000 egress path.
 - Generator logs show successful `201` deliveries.
 - HPA has current CPU metrics and the configured replica bounds.
 - `PodMonitoring` configuration is accepted and PromQL returns `up`, `greengrid_telemetry_records`, and `rate(greengrid_telemetry_submissions_total[5m])`.
