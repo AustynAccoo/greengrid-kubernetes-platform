@@ -8,6 +8,7 @@ metadata:
 data:
   TELEMETRY_RETENTION_LIMIT: {{ .Values.telemetryApi.config.retentionLimit | quote }}
   LOG_LEVEL: {{ .Values.telemetryApi.config.logLevel | quote }}
+  LOAD_SIMULATION_ENABLED: {{ .Values.telemetryApi.config.loadSimulationEnabled | quote }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -24,4 +25,3 @@ data:
   TELEMETRY_INITIAL_BACKOFF_SECONDS: {{ .Values.telemetryGenerator.config.initialBackoffSeconds | quote }}
   TELEMETRY_GENERATOR_HEALTH_FILE: {{ .Values.telemetryGenerator.probes.healthFile | quote }}
   LOG_LEVEL: {{ .Values.telemetryGenerator.config.logLevel | quote }}
-

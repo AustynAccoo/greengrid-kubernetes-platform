@@ -1,0 +1,22 @@
+{{- if .Values.monitoring.managedPrometheus.enabled }}
+apiVersion: monitoring.googleapis.com/v1
+kind: PodMonitoring
+metadata:
+  name: {{ include "greengrid.apiName" . }}
+  labels:
+    {{- include "greengrid.labels" . | nindent 4 }}
+    app.kubernetes.io/component: telemetry-api
+spec:
+  selector:
+    matchLabels:
+      {{- include "greengrid.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: telemetry-api
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: {{ .Values.monitoring.managedPrometheus.interval | quote }}
+      timeout: {{ .Values.monitoring.managedPrometheus.timeout | quote }}
+  filterRunning: true
+  limits:
+    {{- toYaml .Values.monitoring.managedPrometheus.limits | nindent 4 }}
+{{- end }}

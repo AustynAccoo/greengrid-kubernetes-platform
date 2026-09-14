@@ -37,13 +37,32 @@ def _retention_limit_from_environment() -> int:
     return value
 
 
-def create_app(store: TelemetryStore | None = None) -> FastAPI:
+def _load_simulation_enabled_from_environment() -> bool:
+    raw_value = os.getenv("LOAD_SIMULATION_ENABLED", "false").strip().lower()
+    if raw_value in {"1", "true", "yes"}:
+        return True
+    if raw_value in {"0", "false", "no"}:
+        return False
+    LOGGER.warning("invalid load simulation setting; disabling", extra={"error": raw_value})
+    return False
+
+
+def create_app(
+    store: TelemetryStore | None = None,
+    *,
+    load_simulation_enabled: bool | None = None,
+) -> FastAPI:
     """Create an application with an injectable store for deterministic tests."""
 
     telemetry_store = (
         store if store is not None else TelemetryStore(_retention_limit_from_environment())
     )
     service = TelemetryService(telemetry_store)
+    simulation_enabled = (
+        _load_simulation_enabled_from_environment()
+        if load_simulation_enabled is None
+        else load_simulation_enabled
+    )
     application = FastAPI(title="GreenGrid Telemetry API", version=__version__)
 
     @application.exception_handler(RequestValidationError)
@@ -55,7 +74,7 @@ def create_app(store: TelemetryStore | None = None) -> FastAPI:
             extra={"error": str(exc), "path": request.url.path},
         )
         return JSONResponse(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             content={
                 "error": {
                     "code": "validation_error",
@@ -126,10 +145,12 @@ def create_app(store: TelemetryStore | None = None) -> FastAPI:
             f"greengrid_telemetry_submissions_total {service.submission_count()}\n"
         )
 
-    @application.post("/simulate-load", response_model=LoadResponse)
-    def simulate_load(request: LoadRequest) -> LoadResponse:
-        LOGGER.info("starting bounded load simulation")
-        return service.simulate_load(request.duration_ms)
+    if simulation_enabled:
+
+        @application.post("/simulate-load", response_model=LoadResponse)
+        def simulate_load(request: LoadRequest) -> LoadResponse:
+            LOGGER.info("starting bounded load simulation")
+            return service.simulate_load(request.duration_ms)
 
     return application
 

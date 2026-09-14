@@ -1,10 +1,9 @@
-# Repository-wide ownership; replace with the actual team before enforcing reviews.
-* @greengrid-platform
+# Personal portfolio ownership. Replace with a team when the repository has one.
+* @AustynAccoo
 
 # Sensitive platform and delivery paths
-/terraform/ @greengrid-platform
-/gitops/ @greengrid-platform
-/.github/workflows/ @greengrid-platform
-/docs/security.md @greengrid-platform
-/SECURITY.md @greengrid-platform
-
+/terraform/ @AustynAccoo
+/helm/ @AustynAccoo
+/.github/workflows/ @AustynAccoo
+/docs/security.md @AustynAccoo
+/SECURITY.md @AustynAccoo

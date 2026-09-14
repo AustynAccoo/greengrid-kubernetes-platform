@@ -52,3 +52,24 @@ def test_generator_retries_with_exponential_backoff() -> None:
     assert delivered is True
     assert attempts == 3
     assert delays == [0.25, 0.5]
+
+
+def test_generator_does_not_retry_non_retryable_client_error() -> None:
+    attempts = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal attempts
+        attempts += 1
+        return httpx.Response(400, request=request)
+
+    delays: list[float] = []
+    config = GeneratorConfig(max_retries=3, initial_backoff_seconds=0.25)
+    http_client = httpx.Client(transport=httpx.MockTransport(handler))
+
+    with http_client:
+        client = TelemetryClient(config, client=http_client, sleep=delays.append)
+        delivered = client.send(create_payload(random.Random(2)))
+
+    assert delivered is False
+    assert attempts == 1
+    assert delays == []

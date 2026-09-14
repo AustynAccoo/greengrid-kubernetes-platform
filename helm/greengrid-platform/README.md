@@ -10,6 +10,7 @@ This chart renders namespace-scoped GreenGrid workloads. It deliberately does no
 - The API HPA scales on CPU utilization relative to the CPU request. Its bounds and stabilization differ by environment. The cluster must provide the metrics API; this chart does not install one.
 - The API PodDisruptionBudget constrains voluntary evictions: development allows its single pod to move, staging keeps one available, and production keeps two. It does not prevent involuntary failures and can delay maintenance when spare capacity is unavailable.
 - ResourceQuota limits aggregate namespace consumption. LimitRange supplies guardrails, while every workload container still declares explicit requests and limits.
+- A namespaced GKE `PodMonitoring` resource selects API pods and scrapes `/metrics` every 30 seconds with explicit timeout, sample, and label limits.
 - A Helm test calls API readiness through the ClusterIP Service.
 
 ## Probe design
@@ -24,7 +25,7 @@ Requests drive scheduling and form the denominator for CPU HPA utilization. Limi
 
 ## Network paths
 
-Default-deny selects all pods for ingress and egress. DNS egress permits TCP/UDP 53 only to `k8s-app: kube-dns` pods in `kube-system`. Generator egress permits TCP 8000 only to API pods, with matching API ingress from generator and Helm-test pods. There is no general internet egress or external API ingress.
+Default-deny selects all pods for ingress and egress. DNS egress permits TCP/UDP 53 only to `k8s-app: kube-dns` pods in `kube-system`. Separate generator and Helm-test egress policies permit TCP 8000 only to API pods in the same namespace and Helm release, with matching API ingress from generator and Helm-test pods. A separate rule admits TCP 8000 from `app.kubernetes.io/name=collector` pods in the Standard GKE `gmp-system` namespace. There is no general internet egress or external API ingress.
 
 DNS labels and CNI behavior vary and must be verified. An ingress controller, service mesh, external data store, cloud API, or telemetry exporter would need additional narrowly scoped policy.
 
@@ -46,7 +47,7 @@ helm lint helm/greengrid-platform -f helm/greengrid-platform/values-dev.yaml
 helm template greengrid helm/greengrid-platform --namespace greengrid-dev -f helm/greengrid-platform/values-dev.yaml
 ```
 
-`make helm-verify` lints, renders, attempts kubectl client-side dry-run, performs Helm's fully offline client dry-run, and checks the rendered security invariants for every environment. Kubectl may still require API discovery even in client mode; without a cluster, the Helm dry-run and rendered-manifest verifier provide the offline gates.
+`make helm-verify` lints, renders, performs Helm's fully offline client dry-run, and checks the rendered security and observability invariants for every environment. The Python verifier asserts all 19 resources and the exact network/scrape contracts. These gates do not invoke kubectl or contact Kubernetes; Helm client dry-run and rendered-manifest verification run offline.
 
 ## Real production adjustments
 

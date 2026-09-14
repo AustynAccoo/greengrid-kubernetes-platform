@@ -1,6 +1,8 @@
 -r applications/telemetry-api/requirements.txt
 -r applications/telemetry-generator/requirements.txt
 
-pytest==8.4.1
-ruff==0.12.1
-
+httpx2==2.12.0
+pip-audit==2.10.1
+PyYAML==6.0.3
+pytest==9.1.1
+ruff==0.16.7

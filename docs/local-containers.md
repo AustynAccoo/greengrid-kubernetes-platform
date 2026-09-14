@@ -2,7 +2,7 @@
 
 ## Security model
 
-Both images use Python `3.12.11-slim-bookworm` pinned to an immutable multi-platform digest. They install only their service-specific pinned runtime requirements, copy only source code, run as UID/GID `10001`, use exec-form process commands, and contain no credentials. OCI labels identify the application, version, license, and source repository.
+Both images use Python `3.12.14-slim-bookworm` pinned to an immutable multi-platform digest. They install only their service-specific pinned runtime requirements, copy only source code, run as UID/GID `10001`, use exec-form process commands, and contain no credentials. OCI labels identify the application, version, license, and source repository.
 
 Compose adds read-only root filesystems, bounded temporary filesystems, all-capability drops, `no-new-privileges`, PID limits, CPU and memory limits, and a Docker-internal service network. The generator is attached only to that internal network. The API also joins a dedicated edge network so Docker Desktop can publish API port 8000; no generator port is exposed. These controls improve local parity but do not replace orchestration policy or production hardening.
 
@@ -23,11 +23,13 @@ make build    # Build both local images
 make run      # Start both services and wait for health
 make logs     # Follow service logs
 make stop     # Stop and remove the local Compose containers
-make verify   # Run local code gates and container verification
+make verify   # Run local code gates and container runtime verification
 make clean    # Stop Compose and remove local images/caches
 ```
 
-After `make run`, inspect `http://localhost:8000/health/live`, `http://localhost:8000/health/ready`, and `http://localhost:8000/telemetry`.
+After `make run`, inspect `http://localhost:8000/health/live`, `http://localhost:8000/health/ready`, `http://localhost:8000/telemetry`, and `http://localhost:8000/metrics`.
+
+The runtime verifier also asserts UID/GID `10001`, rejects writes to the root filesystem, confirms `/tmp` is writable, and inspects the Compose runtime for `ReadonlyRootfs`, `CapDrop=ALL`, and `no-new-privileges`.
 
 ## Immutable production references
 

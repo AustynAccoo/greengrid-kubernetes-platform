@@ -1,6 +1,7 @@
 locals {
   node_project_roles = toset([
     "roles/container.defaultNodeServiceAccount",
+    "roles/monitoring.metricWriter",
   ])
 }
 
@@ -26,4 +27,3 @@ resource "google_artifact_registry_repository_iam_member" "reader" {
   role       = "roles/artifactregistry.reader"
   member     = "serviceAccount:${google_service_account.gke_nodes.email}"
 }
-

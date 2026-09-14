@@ -87,3 +87,34 @@ def test_record_retention_limit_discards_oldest() -> None:
         "battery-002",
         "battery-003",
     ]
+
+
+def test_metrics_endpoint_exposes_typed_api_metrics() -> None:
+    client = TestClient(create_app())
+    assert client.post("/telemetry", json=telemetry_payload()).status_code == 201
+
+    response = client.get("/metrics")
+
+    assert response.status_code == 200
+    assert "# TYPE greengrid_telemetry_records gauge" in response.text
+    assert "greengrid_telemetry_records 1" in response.text
+    assert "# TYPE greengrid_telemetry_submissions_total counter" in response.text
+    assert "greengrid_telemetry_submissions_total 1" in response.text
+
+
+def test_load_simulation_is_bounded_by_request_validation() -> None:
+    client = TestClient(create_app(load_simulation_enabled=True))
+
+    accepted = client.post("/simulate-load", json={"duration_ms": 1})
+    rejected = client.post("/simulate-load", json={"duration_ms": 5_001})
+
+    assert accepted.status_code == 200
+    assert accepted.json()["duration_ms"] == 1
+    assert accepted.json()["iterations"] > 0
+    assert rejected.status_code == 422
+
+
+def test_load_simulation_is_disabled_by_default() -> None:
+    response = TestClient(create_app()).post("/simulate-load", json={"duration_ms": 1})
+
+    assert response.status_code == 404

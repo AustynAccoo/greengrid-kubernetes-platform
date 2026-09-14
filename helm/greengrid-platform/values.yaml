@@ -10,7 +10,7 @@ telemetryApi:
     tag: git-0000000000000000000000000000000000000000
     pullPolicy: IfNotPresent
   service: {port: 8000}
-  config: {retentionLimit: 1000, logLevel: info}
+  config: {retentionLimit: 1000, logLevel: info, loadSimulationEnabled: false}
   podAnnotations: {}
   podLabels: {}
   resources:
@@ -83,6 +83,15 @@ networkPolicy:
   dns:
     namespaceLabel: {kubernetes.io/metadata.name: kube-system}
     podLabels: {k8s-app: kube-dns}
+  managedPrometheusCollector:
+    namespaceLabel: {kubernetes.io/metadata.name: gmp-system}
+    podLabels: {app.kubernetes.io/name: collector}
+monitoring:
+  managedPrometheus:
+    enabled: true
+    interval: 30s
+    timeout: 10s
+    limits: {samples: 100, labels: 20, labelNameLength: 100, labelValueLength: 200}
 serviceAccount:
   annotations:
     telemetryApi: {}

@@ -10,6 +10,8 @@ services:
     restart: unless-stopped
     ports:
       - "${TELEMETRY_API_HOST_PORT:-8000}:8000"
+    environment:
+      LOAD_SIMULATION_ENABLED: "${LOAD_SIMULATION_ENABLED:-false}"
     networks:
       - greengrid-internal
       - greengrid-edge
