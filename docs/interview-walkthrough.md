@@ -58,6 +58,14 @@
 
 **What it proves:** ownership, honest risk communication, and the ability to close control gaps.
 
+## DevSecOps explanation
+
+> I turn findings into preventive checks: The DNS incident and Helm-test policy gap became exact network-policy assertions; vulnerable dependencies gained recurring audits; missing ingestion gained Terraform and scrape checks; mutable tags gained registry enforcement; and load simulation became dev-only. The container job now also configures SHA-pinned Trivy scans of both locally built images, failing on fixable CRITICAL vulnerabilities with read-only workflow permissions. I distinguish a configured gate from a successful CI run and a code fix from live deployment evidence.
+
+Use the [findings register](security-findings.md) to show the risk, evidence, resolution, preventive control, and status for each gap. This gate does not cover lower-severity or unfixed image vulnerabilities, image signatures, or admission decisions.
+
+The production sequence is **TruffleHog OSS** with validated PR/push ranges, **GitHub-to-GCP Workload Identity Federation** for keyless delivery, **Artifact Analysis** for registry vulnerability evidence, **Binary Authorization** for attestation-backed admission, and **SCC/GKE security posture review** for operational findings. These are roadmap items, not current deployed controls; see [the security roadmap](security.md#production-security-roadmap).
+
 ## Likely follow-ups
 
 ### Why Terraform and Helm instead of one tool?
