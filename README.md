@@ -11,7 +11,7 @@ GreenGrid is an employer-facing platform-engineering project built around a smal
 | GCP infrastructure | Reusable Terraform modules for required APIs, custom VPC/subnet, Artifact Registry, least-privilege node IAM, and one zonal Standard GKE development cluster in `us-east4-b` |
 | Kubernetes | One Helm chart with dev/staging/prod values, 19 rendered resources per environment, probes, HPA, PDB, quotas, dedicated ServiceAccounts, and default-deny network policy |
 | Observability | GKE managed Prometheus collection, a namespaced `PodMonitoring` target for `/metrics`, restricted collector ingress, GKE system/workload logging, and a development-only HPA load-simulation endpoint |
-| Delivery controls | Four GitHub Actions gates for application/dependency checks, Helm policy checks, Terraform checks, and the running container contract; Dependabot covers actions, Python, Docker, and Terraform |
+| Delivery controls | Four GitHub Actions gates for application/dependency checks, Helm policy checks, Terraform checks, and the running container contract plus fixable-CRITICAL image scans; Dependabot covers actions, Python, Docker, and Terraform |
 
 The development infrastructure and workload path have been deployed and exercised. This repository does **not** claim that staging, production, Argo CD, a durable data store, public ingress, or multi-region recovery are live. Those are explicit production extensions, not hidden gaps.
 
@@ -44,6 +44,12 @@ See [the detailed architecture](docs/architecture.md), [the interview walkthroug
 - Default-deny ingress/egress, narrow DNS, generator-to-API, Helm-test-to-API, and managed-collector-to-API paths.
 - Explicit requests/limits, namespace quota/limit range, three probe types, CPU HPA, and environment-aware PDBs.
 - Read-only CI permissions, commit-pinned actions, vulnerability auditing, and automated manifest policy assertions.
+
+## DevSecOps approach
+
+Turn a discovered security gap into a scoped fix and a repeatable CI check. The container job builds each local image once, verifies its runtime restrictions, then scans both images with the SHA-pinned official Trivy Action. Fixable CRITICAL OS/library vulnerabilities fail CI; unfixed and lower-severity findings are outside this gate. Workflow permissions remain read-only. This is configured automation, not a claim of a successful scan run or enforced branch protection.
+
+See the [six resolved findings and their preventive controls](docs/security-findings.md). The production roadmap is TruffleHog OSS with tested explicit PR/push ranges; GitHub-to-GCP Workload Identity Federation for keyless delivery; Artifact Analysis for registry vulnerability evidence; Binary Authorization for admission backed by attestations; and Security Command Center (SCC)/GKE security posture review. These remain planned, not deployed controls. Details are in the [security roadmap](docs/security.md#production-security-roadmap).
 
 ## Local validation
 

@@ -88,7 +88,7 @@ jobs:
         run: make terraform-verify
 
   containers:
-    name: Container runtime contract
+    name: Container runtime and vulnerability gates
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -97,4 +97,35 @@ jobs:
         with:
           persist-credentials: false
       - name: Build and verify the local service path
+        id: container-contract
         run: ./scripts/verify-containers.sh
+      - name: Scan telemetry api image for fixable critical vulnerabilities
+        if: ${{ !cancelled() && steps.container-contract.outcome == 'success' }}
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          TRIVY_IMAGE_SRC: docker
+        with:
+          version: v0.74.0
+          scan-type: image
+          image-ref: greengrid-telemetry-api:local
+          scanners: vuln
+          vuln-type: os,library
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          format: table
+      - name: Scan telemetry generator image for fixable critical vulnerabilities
+        if: ${{ !cancelled() && steps.container-contract.outcome == 'success' }}
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          TRIVY_IMAGE_SRC: docker
+        with:
+          version: v0.74.0
+          scan-type: image
+          image-ref: greengrid-telemetry-generator:local
+          scanners: vuln
+          vuln-type: os,library
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          format: table
