@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="760" viewBox="0 0 1080 760" role="img" aria-labelledby="title desc">
+<title id="title">GreenGrid | Validation and deployment</title><desc id="desc">Pull requests run four CI gates and produce review evidence. CI does not publish images or deploy. Separately approved deployment uses Terraform for GCP infrastructure, a manual build and publish step for Artifact Registry, and Helm for workloads on GKE.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/></marker></defs>
+<rect width="1080" height="760" rx="16" fill="#f8fafc"/>
+<g font-family="Arial, Helvetica, sans-serif" fill="#0f172a">
+<text x="40" y="48" font-size="26" font-weight="700">GreenGrid | Validation and deployment</text>
+<text x="40" y="80" font-size="17" fill="#475569">CI validates changes. Cloud delivery is a separate, approved operational step.</text>
+<rect x="40" y="125" width="280" height="90" rx="10" fill="#ffffff" stroke="#94a3b8"/>
+<text x="58" y="159" font-size="20" fill="#0f172a">Pull request</text>
+<text x="58" y="188" font-size="16" fill="#475569">Source, infrastructure, chart</text>
+<rect x="400" y="125" width="280" height="90" rx="10" fill="#dcfce7" stroke="#94a3b8"/>
+<text x="418" y="159" font-size="20" fill="#0f172a">Four CI gates</text>
+<text x="418" y="188" font-size="16" fill="#475569">Application, Helm, TF, images</text>
+<rect x="760" y="125" width="280" height="90" rx="10" fill="#ffffff" stroke="#94a3b8"/>
+<text x="778" y="159" font-size="20" fill="#0f172a">Review evidence</text>
+<text x="778" y="188" font-size="16" fill="#475569">Tests, policies, Trivy results</text>
+<path d="M 320 170 L 400 170" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M 680 170 L 760 170" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="40" y="251" font-size="17" fill="#475569">Validation workflow: read-only permissions; no image push or cloud deployment.</text>
+<path d="M 40 285 H 1040" stroke="#cbd5e1" stroke-width="2"/>
+<text x="40" y="321" font-size="16" fill="#0369a1">SEPARATE APPROVED DEVELOPMENT DEPLOYMENT</text>
+<rect x="40" y="355" width="280" height="90" rx="10" fill="#ffffff" stroke="#94a3b8"/>
+<text x="58" y="389" font-size="20" fill="#0f172a">Terraform</text>
+<text x="58" y="418" font-size="16" fill="#475569">Reviewed plan, then apply</text>
+<rect x="400" y="355" width="280" height="90" rx="10" fill="#e0f2fe" stroke="#94a3b8"/>
+<text x="418" y="389" font-size="20" fill="#0f172a">GCP foundation</text>
+<text x="418" y="418" font-size="16" fill="#475569">VPC, IAM, GKE, registry</text>
+<path d="M 320 400 L 400 400" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="40" y="545" width="280" height="90" rx="10" fill="#ffffff" stroke="#94a3b8"/>
+<text x="58" y="579" font-size="20" fill="#0f172a">Build and publish</text>
+<text x="58" y="608" font-size="16" fill="#475569">Manual; Git-SHA image tags</text>
+<rect x="400" y="545" width="280" height="90" rx="10" fill="#e0f2fe" stroke="#94a3b8"/>
+<text x="418" y="579" font-size="20" fill="#0f172a">Artifact Registry</text>
+<text x="418" y="608" font-size="16" fill="#475569">Stores the service images</text>
+<path d="M 320 590 L 400 590" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M 540 445 L 540 545" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="555" y="504" font-size="15" fill="#475569">includes</text>
+<rect x="760" y="355" width="280" height="90" rx="10" fill="#ffffff" stroke="#94a3b8"/>
+<text x="778" y="389" font-size="20" fill="#0f172a">Helm chart + values</text>
+<text x="778" y="418" font-size="16" fill="#475569">Reviewed workload upgrade</text>
+<rect x="760" y="545" width="280" height="90" rx="10" fill="#e0f2fe" stroke="#94a3b8"/>
+<text x="778" y="579" font-size="20" fill="#0f172a">GKE workloads</text>
+<text x="778" y="608" font-size="16" fill="#475569">Dev API and generator</text>
+<path d="M 900 445 L 900 545" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="916" y="504" font-size="15" fill="#475569">deploy</text>
+<path d="M 760 590 L 680 590" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="697" y="572" font-size="15" fill="#475569">pull</text>
+<text x="40" y="689" font-size="17" fill="#475569">Terraform owns persistent GCP resources. Helm owns namespace-scoped workloads.</text>
+<text x="40" y="719" font-size="17" fill="#475569">Staging and production are validated configurations, not live deployment claims.</text>
+</g></svg>

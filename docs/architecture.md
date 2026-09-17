@@ -8,29 +8,17 @@ GreenGrid demonstrates how a small internal service can be delivered to GKE with
 
 The synthetic generator models battery, wind, and marine assets. It sends validated JSON telemetry to an internal FastAPI service. The API retains only a bounded in-memory window so the project stays focused on platform engineering; a durable store is a known production requirement.
 
-```mermaid
-flowchart LR
-    GEN["Telemetry generator"] -->|"HTTP :8000"| SVC["ClusterIP service"]
-    SVC --> API["Telemetry API pods"]
-    API --> MEM["Bounded memory store"]
-    COL["GKE Prometheus collector"] -->|"scrape /metrics"| API
-    COL --> MON["Cloud Monitoring"]
-```
+![GreenGrid workload and telemetry architecture](images/workload-architecture.svg)
+
+[Open the workload diagram](images/workload-architecture.svg). Collection is configured in code and still requires deployment and live verification.
 
 There is no external load balancer or public application ingress. Kubernetes DNS is the service-discovery mechanism. NetworkPolicy permits only DNS, generator-to-API, Helm-test-to-API, and managed-collector-to-API traffic.
 
 ## Delivery and infrastructure boundaries
 
-```mermaid
-flowchart TD
-    PR["Pull request"] --> CI["Four CI gates"]
-    CI --> IMG["Immutable images"]
-    IMG --> REG["Artifact Registry"]
-    TF["Terraform modules"] --> GCP["VPC, IAM, GKE"]
-    REG --> GKE["GKE development cluster"]
-    GCP --> GKE
-    HELM["Helm values + chart"] --> GKE
-```
+![GreenGrid CI validation and separate approved deployment boundaries](images/delivery-boundaries.svg)
+
+[Open the delivery diagram](images/delivery-boundaries.svg). CI produces validation evidence; image publication and cloud deployment are separate approved operations.
 
 | Boundary | Owner | Reason |
 | --- | --- | --- |
@@ -106,3 +94,4 @@ Argo CD remains a planned delivery extension. Until it is implemented and demons
 - **Public dev nodes over Cloud NAT:** avoids fixed NAT cost; production requires private nodes and controlled egress.
 - **In-memory data over a database:** keeps the workload small and makes retention behavior deterministic; it is not durable or shared across replicas.
 - **CI validation without automatic apply:** reduces credential and blast-radius risk; delivery remains a reviewed operational step until federation and protected environments are implemented.
+
