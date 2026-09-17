@@ -8,10 +8,10 @@ Project risk ratings (Low, Medium, High, or Critical) express remediation priori
 
 - **Finding ID:** GG-SEC-001
 - **Project risk rating:** Medium
-- **Detection method:** Runtime troubleshooting documented in the interview incident account: generator restarts and missing telemetry led to checks of Pod events, logs, Service endpoints, and DNS resolution.
+- **Detection method:** Historical runtime troubleshooting notes record the investigation: generator restarts and missing telemetry led to checks of Pod events, logs, Service endpoints, and DNS resolution.
 - **Risk rating rationale:** The documented failure interrupted the project’s telemetry path, but the evidence describes a development availability problem, not data compromise or a production incident.
 - **Risk:** Blocking DNS prevents the generator from finding the API, interrupting telemetry and causing restarts.
-- **Evidence:** The [interview incident account](interview-walkthrough.md#problem-story-1-default-deny-blocked-dns) records the failure; [network policies](../helm/greengrid-platform/templates/networkpolicies.yaml) contain the scoped DNS allowance.
+- **Evidence:** Historical incident notes record a ready API Service endpoint while the generator could not resolve the Service name. After the scoped DNS allowance, name resolution and successful `201` telemetry deliveries were reported. The [network policies](../helm/greengrid-platform/templates/networkpolicies.yaml) contain that allowance. These are historical observations, not fresh runtime verification.
 - **Resolution:** Allow TCP/UDP 53 to `k8s-app=kube-dns` pods in `kube-system`, retaining default-deny ingress and egress.
 - **Preventive CI control:** `make helm-verify` invokes [the Helm verifier](../scripts/verify_helm_security.py) to check DNS peers and ports in every environment.
 - **Status:** Resolved in code; historical runtime recovery is documented. No new live validation claimed.
@@ -32,10 +32,10 @@ Project risk ratings (Low, Medium, High, or Critical) express remediation priori
 
 - **Finding ID:** GG-SEC-003
 - **Project risk rating:** High
-- **Detection method:** The interview dependency account records an OSV-backed dependency audit identifying the old Starlette resolution and Pytest pin despite passing application tests.
+- **Detection method:** Historical dependency remediation notes record an OSV-backed dependency audit identifying the old Starlette resolution and Pytest pin despite passing application tests.
 - **Risk rating rationale:** Known advisories affected both runtime and development dependencies, warranting prompt project remediation. The repository evidence does not establish specific exploitability, compromise, or a CVSS score.
 - **Risk:** Vulnerable runtime or development dependencies can expose application and build environments even when unit tests pass.
-- **Evidence:** The [documented dependency incident](interview-walkthrough.md#problem-story-2-dependency-security-drift) identifies the old Starlette/Pytest stack; [requirements](../requirements-dev.txt) and service requirements contain the replacement pins. Historical audit results are not a current clean bill of health.
+- **Evidence:** Historical remediation notes identify the old Starlette/Pytest stack and report a clean audit after upgrades and repeated application checks. The [development requirements](../requirements-dev.txt) and [API requirements](../applications/telemetry-api/requirements.txt) contain the replacement pins. Historical audit results are not a current clean bill of health.
 - **Resolution:** Upgrade the affected dependency stack and digest-pinned Python base, retaining application contract tests.
 - **Preventive CI control:** `make dependency-audit` runs pip-audit; application tests check behavior; [Dependabot](../.github/dependabot.yml) proposes updates. The container job now configures Trivy scans of both local images for fixable CRITICAL OS/library vulnerabilities.
 - **Status:** Earlier findings remediated in repository pins; fresh audit and image-scan results remain required. Lower-severity and unfixed image vulnerabilities do not fail this Trivy gate.
@@ -44,10 +44,10 @@ Project risk ratings (Low, Medium, High, or Critical) express remediation priori
 
 - **Finding ID:** GG-SEC-004
 - **Project risk rating:** Medium
-- **Detection method:** The interview account describes tracing the metrics path from the API endpoint through Terraform and Helm, finding managed Prometheus disabled and no scrape resource.
+- **Detection method:** Historical implementation notes describe tracing the metrics path from the API endpoint through Terraform and Helm, finding managed Prometheus disabled and no scrape resource.
 - **Risk rating rationale:** The missing ingestion path reduced operational visibility and fault detection; it did not itself establish an outage or compromise, and no production monitoring claim is made.
 - **Risk:** A working `/metrics` endpoint without ingestion leaves operational failures unobserved.
-- **Evidence:** [The incident account](interview-walkthrough.md#problem-story-3-metrics-endpoint-without-an-ingestion-path), [GKE module](../terraform/modules/gke/main.tf), [node IAM](../terraform/modules/iam/main.tf), and [PodMonitoring](../helm/greengrid-platform/templates/podmonitoring-api.yaml) show the missing path and its implementation.
+- **Evidence:** Historical implementation notes record that `/metrics` existed while managed collection was disabled and no scrape resource was configured. The [GKE module](../terraform/modules/gke/main.tf), [node IAM](../terraform/modules/iam/main.tf), and [PodMonitoring](../helm/greengrid-platform/templates/podmonitoring-api.yaml) contain the collection configuration added to address that gap.
 - **Resolution:** Enable managed Prometheus, grant the node identity `roles/monitoring.metricWriter`, configure scraping with limits, and admit only scoped managed-collector ingress.
 - **Preventive CI control:** [Terraform security checks](../scripts/verify_terraform_security.py) require collection and IAM configuration; Helm assertions require the scrape contract and collector ingress.
 - **Status:** Resolved in code; actual ingestion requires separately approved deployment and metric-query evidence. Static checks do not prove live ingestion.
