@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="590" viewBox="0 0 1080 590" role="img" aria-labelledby="title desc">
+<title id="title">GreenGrid | Workload and telemetry</title><desc id="desc">The generator sends HTTP telemetry through a ClusterIP Service to the API. The API keeps a bounded in-memory window. A managed collector scrapes API metrics and sends them to Cloud Monitoring. The collection configuration still needs live verification.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/></marker></defs>
+<rect width="1080" height="590" rx="16" fill="#f8fafc"/>
+<g font-family="Arial, Helvetica, sans-serif" fill="#0f172a">
+<text x="40" y="48" font-size="26" font-weight="700">GreenGrid | Workload and telemetry</text>
+<text x="40" y="80" font-size="17" fill="#475569">Internal service path, restricted traffic, and configured metrics collection</text>
+<rect x="40" y="140" width="280" height="90" rx="10" fill="#ffffff" stroke="#94a3b8"/>
+<text x="58" y="174" font-size="20" fill="#0f172a">Telemetry generator</text>
+<text x="58" y="203" font-size="16" fill="#475569">Synthetic energy readings</text>
+<rect x="400" y="140" width="280" height="90" rx="10" fill="#ffffff" stroke="#94a3b8"/>
+<text x="418" y="174" font-size="20" fill="#0f172a">ClusterIP Service</text>
+<text x="418" y="203" font-size="16" fill="#475569">Internal DNS and routing</text>
+<rect x="760" y="140" width="280" height="90" rx="10" fill="#ffffff" stroke="#94a3b8"/>
+<text x="778" y="174" font-size="20" fill="#0f172a">Telemetry API</text>
+<text x="778" y="203" font-size="16" fill="#475569">Validation, health, /metrics</text>
+<path d="M 320 185 L 400 185" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M 680 185 L 760 185" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="337" y="168" font-size="14" fill="#475569">HTTP</text>
+<text x="691" y="168" font-size="14" fill="#475569">:8000</text>
+<rect x="760" y="330" width="280" height="90" rx="10" fill="#ffffff" stroke="#94a3b8"/>
+<text x="778" y="364" font-size="20" fill="#0f172a">Bounded memory</text>
+<text x="778" y="393" font-size="16" fill="#475569">Per replica; no durable store</text>
+<path d="M 900 230 L 900 330" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="917" y="282" font-size="14" fill="#475569">retains</text>
+<rect x="400" y="330" width="280" height="90" rx="10" fill="#e0f2fe" stroke="#94a3b8"/>
+<text x="418" y="364" font-size="20" fill="#0f172a">Managed collector</text>
+<text x="418" y="393" font-size="16" fill="#475569">GKE managed Prometheus</text>
+<path d="M 540 330 L 540 280 L 800 280 L 800 230" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="567" y="267" font-size="15" fill="#475569">scrape /metrics</text>
+<rect x="40" y="330" width="280" height="90" rx="10" fill="#e0f2fe" stroke="#94a3b8"/>
+<text x="58" y="364" font-size="20" fill="#0f172a">Cloud Monitoring</text>
+<text x="58" y="393" font-size="16" fill="#475569">Metrics ingestion and queries</text>
+<path d="M 400 375 L 320 375" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="336" y="358" font-size="14" fill="#475569">write</text>
+<text x="40" y="475" font-size="18" fill="#475569">Security: default-deny policies, scoped DNS and API access; no public application ingress.</text>
+<text x="40" y="509" font-size="17" fill="#475569">Status: dev service path previously exercised. Collection changes are configured in code;</text>
+<text x="40" y="535" font-size="17" fill="#475569">deployment, collector health, and PromQL results still require live verification.</text>
+</g></svg>

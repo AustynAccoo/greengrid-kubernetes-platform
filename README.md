@@ -1,6 +1,6 @@
 # GreenGrid: Secure Kubernetes Platform for Energy Telemetry
 
-GreenGrid is an employer-facing platform-engineering project built around a small energy-telemetry workload. The application is intentionally simple; the engineering focus is repeatable GKE infrastructure, hardened Kubernetes workloads, controlled change, observability, and evidence-driven troubleshooting.
+GreenGrid is a DevSecOps platform-engineering project built around a small energy-telemetry workload. The application is intentionally simple; the engineering focus is repeatable GKE infrastructure, hardened Kubernetes workloads, controlled change, observability, and evidence-driven troubleshooting.
 
 ## What is implemented
 
@@ -17,21 +17,11 @@ The development infrastructure and workload path have been deployed and exercise
 
 ## Architecture at a glance
 
-```mermaid
-flowchart TD
-    GH["GitHub pull request"] --> CI["CI policy gates"]
-    CI --> AR["Artifact Registry"]
-    TF["Terraform"] --> GKE["GKE Standard"]
-    AR --> GKE
-    GKE --> HELM["Helm release"]
-    HELM --> GEN["Telemetry generator"]
-    GEN --> SVC["ClusterIP service"]
-    SVC --> API["Telemetry API"]
-    GMP["Managed Prometheus"] --> API
-    GMP --> CM["Cloud Monitoring"]
-```
+![GreenGrid workload architecture: generator, internal Service, API, and managed metrics collection](docs/images/workload-architecture.svg)
 
-Terraform owns persistent GCP resources. Helm owns namespace-scoped Kubernetes resources. The generator resolves the internal Service name and submits telemetry over TCP 8000. The API validates and retains a bounded in-memory working set, exposes health and metrics endpoints, and has no external Service. Managed Prometheus collectors scrape each API pod and push metrics to Cloud Monitoring.
+[Open the diagram](docs/images/workload-architecture.svg). The image is stored in the repository and does not require Mermaid rendering.
+
+Terraform owns persistent GCP resources. Helm owns namespace-scoped Kubernetes resources. The generator resolves the internal Service name and submits telemetry over TCP 8000. The API validates and retains a bounded in-memory working set, exposes health and metrics endpoints, and has no external Service. The configured Managed Prometheus path scrapes each API pod and pushes metrics to Cloud Monitoring. The collection changes still require an approved deployment and live verification. CI validates changes; publishing images and deploying to GKE are separate approved steps.
 
 See [the detailed architecture](docs/architecture.md), [the interview walkthrough](docs/interview-walkthrough.md), and [the troubleshooting runbook](docs/runbooks/gke-troubleshooting.md).
 
@@ -47,7 +37,7 @@ See [the detailed architecture](docs/architecture.md), [the interview walkthroug
 
 ## DevSecOps approach
 
-Turn a discovered security gap into a scoped fix and a repeatable CI check. The container job builds each local image once, verifies its runtime restrictions, then scans both images with the SHA-pinned official Trivy Action. Fixable CRITICAL OS/library vulnerabilities fail CI; unfixed and lower-severity findings are outside this gate. Workflow permissions remain read-only. This is configured automation, not a claim of a successful scan run or enforced branch protection.
+Turn a discovered security gap into a scoped fix and a repeatable CI check. The container job builds each local image once, verifies its runtime restrictions, then scans both images with the SHA-pinned official Trivy Action. Fixable CRITICAL OS/library vulnerabilities fail CI; unfixed and lower-severity findings are outside this gate. Workflow permissions remain read-only. The [post-merge CI run for `9d54c45`](https://github.com/AustynAccoo/greengrid-kubernetes-platform/actions/runs/35137209554) passed all four gates, including both Trivy image scans. This evidence applies to that commit and run; it does not establish live cloud enforcement.
 
 See the [six resolved findings and their preventive controls](docs/security-findings.md). The production roadmap is TruffleHog OSS with tested explicit PR/push ranges; GitHub-to-GCP Workload Identity Federation for keyless delivery; Artifact Analysis for registry vulnerability evidence; Binary Authorization for admission backed by attestations; and Security Command Center (SCC)/GKE security posture review. These remain planned, not deployed controls. Details are in the [security roadmap](docs/security.md#production-security-roadmap).
 
@@ -105,3 +95,4 @@ Exact commands and rollback checks are in [the deployment process](docs/deployme
 ## Production boundary
 
 A real production version would use separate GCP projects and state, a regional private cluster, controlled egress, durable managed storage, authenticated/TLS ingress, signed-image admission, stronger SLOs/alerts, backups and restore drills, and a reconciler such as Argo CD. See [production improvements](docs/production-improvements.md).
+
