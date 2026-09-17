@@ -23,7 +23,7 @@ The development infrastructure and workload path have been deployed and exercise
 
 Terraform owns persistent GCP resources. Helm owns namespace-scoped Kubernetes resources. The generator resolves the internal Service name and submits telemetry over TCP 8000. The API validates and retains a bounded in-memory working set, exposes health and metrics endpoints, and has no external Service. The configured Managed Prometheus path scrapes each API pod and pushes metrics to Cloud Monitoring. The collection changes still require an approved deployment and live verification. CI validates changes; publishing images and deploying to GKE are separate approved steps.
 
-See [the detailed architecture](docs/architecture.md), [the interview walkthrough](docs/interview-walkthrough.md), and [the troubleshooting runbook](docs/runbooks/gke-troubleshooting.md).
+See [the detailed architecture](docs/architecture.md), [security findings and preventive controls](docs/security-findings.md), and [the deployment process](docs/deployment-process.md).
 
 ## Security and reliability controls
 
@@ -89,7 +89,7 @@ Exact commands and rollback checks are in [the deployment process](docs/deployme
 - `helm/`: multi-environment workload chart
 - `.github/`: CI, dependency maintenance, and review templates
 - `scripts/`: container, Helm-policy, and Terraform-security verification
-- `docs/`: architecture, operations, security, ADRs, runbooks, and interview material
+- `docs/`: architecture, operations, security, and ADRs
 - `tests/`: application, metrics, bounds, and retry behavior
 
 ## Production boundary
